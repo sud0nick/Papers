@@ -1,0 +1,314 @@
+<!-- Papers by sud0nick (C) 2016 -->
+<div class="row" ng-controller="PapersController">
+	<div class="col-md-4">
+		<div class="container-fluid">
+			<div class="row">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<table style="width: 100%">
+							<tr><td align="left">
+								<h3 class="panel-title">Papers Status</h3>
+							</td><td align="right">
+								<span class="panel-title">
+									<button type="button" class="btn btn-success" ng-show="showRemoveSSLButton" ng-hide="!showRemoveSSLButton" ng-click="unSSLPineapple();">Remove SSL</button>
+									<img ng-show="showUnSSLThrobber" ng-hide="!showUnSSLThrobber" src='/img/throbber.gif'/>
+								</span>
+							</td></tr>
+						</table>
+					</div>
+					<div class="panel-body">
+						<div>
+							<table style="width: 100%">
+							<tr><td>
+								<strong>SSL Certificate and Private Key</strong>
+							</td><td align="right">
+								<button type="button" class="btn" data-toggle="modal" data-target="#viewLogInfo" ng-click="readLog('status.help','help');">?</button>
+							</td></tr>
+							</table>
+							<div ng-repeat="cert in SSLStatus">
+								{{ cert }}
+							</div>
+						</div><br />
+						<div>
+							<strong>Dependencies</strong><br />
+							<button type="button" class="btn btn-success" ng-show="!dependsInstalled" ng-hide="dependsInstalled" ng-click="installDepends();">Install</button>
+							<button type="button" class="btn btn-danger" ng-show="dependsInstalled" ng-hide="!dependsInstalled" ng-click="removeDepends();">Uninstall</button>
+							<img ng-show="dependsProcessing" ng-hide="!dependsProcessing" src='/img/throbber.gif'/>
+						</div><br />
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<table style="width: 100%">
+							<tr><td align="left">
+								<h3 class="panel-title">Certificate Store</h3>
+							</td><td align="right">
+								<img ng-show="showCertThrobber" ng-hide="!showCertThrobber" src='/img/throbber.gif'/>
+							</td></tr>
+						</table>
+					</div>
+					<div class="table-responsive table-dropdown">
+						<table class="table">
+							<thead>
+								<tr>
+									<th>Name</th>
+									<th>Files</th>
+									<th>Encrypted</th>
+									<th>Actions</th>
+									<th align="right"><button type="button" class="btn" data-toggle="modal" data-target="#viewLogInfo" ng-click="readLog('store.help','help');">?</button></th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr ng-repeat="(index,data) in certificates">
+									<td>{{ data.Name }}</td>
+									<td>{{ data.Type }}</td>
+									<td>{{ data.Encrypted }}</td>
+									<td>
+										<button type="button" class="btn btn-sm btn-success" ng-click="sslPineapple(data.Name);">PineSSL</button>
+										<button type="button" class="btn btn-sm btn-info" ng-click="downloadKeys(data.Name);">&darr;</button>
+										<button type="button" class="btn btn-sm btn-danger" ng-click="deleteKeys(data.Name);">X</button>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-md-6">
+		<div class="panel panel-default" style="border-radius: 7px;">
+			<div class="panel-heading">
+				<table style="width: 100%">
+					<tr><td align="left">
+						<h3 class="panel-title">Build Certificates</h3>
+					</td><td align="right">
+						<span class="panel-title">
+							<button id="buildKeysButton" style="display:block" type="button" class="btn btn-success" ng-click="buildCertificate();">Build Keys</button>
+							<img id="papersThrobber" style="display:none" src='/img/throbber.gif'/>
+						</span>
+					</td></tr>
+				</table>
+			</div>
+			<div class="panel-body">
+				<form class="form-horizontal">
+				<div style="width: 100%; text-align: right">
+					<button type="button" class="btn" data-toggle="modal" data-target="#viewLogInfo" ng-click="readLog('build.help','help');">?</button>
+				</div>
+				<div class="form-group">
+					<label class="col-md-3 control-label">Days Valid</label>
+					<div class="col-md-8">
+						<input type="text" class="form-control" ng-model="certDaysValid" placeholder="365">
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-3 control-label">Bit Size</label>
+					<div class="col-md-8">
+						<div class="col-md-3">
+							<label><input type="radio" ng-model="certBitSize" value="2048" name="bitSize"> 2048</label>
+						</div>
+						<div class="col-md-3">
+							<label><input type="radio" ng-model="certBitSize" value="4096" name="bitSize"> 4096</label><br />
+						</div>
+						<div class="col-md-3">
+							<label><input type="radio" ng-model="certBitSize" value="8192" name="bitSize"> 8192</label>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-3 control-label">Signature Algorithm</label>
+					<div class="col-md-8">
+						<select name="sigalgo" ng-model="certSigAlgo" required>
+							<option value="sha1">SHA-1</option>
+							<option value="sha256">SHA-256</option>
+							<option value="sha512">SHA-512</option>
+						</select>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="col-md-3 control-label">Key Pair Name</label>
+					<div class="col-md-8">
+						<input type="text" class="form-control" ng-model="certKeyName" placeholder="Name of exported keys">
+					</div>
+				</div>
+
+				<!--
+					TODO: Make this able to save certificate info settings as defaults.  In the future
+					allow for the saving of certificate info profiles that way certs can be quickly made for recurring
+					situations.
+				-->
+				<h3 class="panel-title">
+					<a href="javascript:;" data-target="#collapseCertInfoGroup" ng-click="collapsed=!collapsed">Certificate Info</a>
+				</h3>
+				<div class="panel-body">
+					<div id="collapseCertInfoGroup" class="panel-collapse collapse in" ng-show="collapsed">
+						<div class="form-group">
+							<label class="col-md-3 control-label">Country</label>
+							<div class="col-md-8">
+								<input type="text" class="form-control" ng-model="certInfoCountry">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-3 control-label">State/Province</label>
+							<div class="col-md-8">
+								<input type="text" class="form-control" ng-model="certInfoState">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-3 control-label">Locality</label>
+							<div class="col-md-8">
+								<input type="text" class="form-control" ng-model="certInfoLocality">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-3 control-label">Organization</label>
+							<div class="col-md-8">
+								<input type="text" class="form-control" ng-model="certInfoOrganization">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-3 control-label">Section</label>
+							<div class="col-md-8">
+								<input type="text" class="form-control" ng-model="certInfoSection">
+							</div>
+						</div>
+						<div class="form-group">
+							<label class="col-md-3 control-label">Common Name</label>
+							<div class="col-md-8">
+								<input type="text" class="form-control" ng-model="certInfoCN">
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-md-8">
+						<label>Encrypt Private Key? <input type="checkbox" ng-model="certEncryptKeysBool"></label>
+					</div>
+				</div>
+				<div class="panel-body" ng-show="certEncryptKeysBool" ng-hide="!certEncryptKeysBool">
+					<div class="form-group">
+						<label class="col-md-3 control-label">Algorithm</label>
+						<div class="col-md-8">
+							<select name="algo" ng-model="certEncryptAlgo">
+								<option value="aes128">AES 128</option>
+								<option value="aes192">AES 192</option>
+								<option value="aes256">AES 256</option>
+								<option value="des">DES</option>
+								<option value="des3">3DES</option>
+								<option value="camellia128">Camellia 128</option>
+								<option value="camellia192">Camellia 192</option>
+								<option value="camellia256">Camellia 256</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 control-label">Private Key Password</label>
+						<div class="col-md-8">
+							<input type="password" class="form-control" ng-model="certEncryptPassword">
+						</div>
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-md-8">
+						<label>Export keys to PKCS#12 container? <input type="checkbox" ng-model="certExportPKCS12"></label>
+					</div>
+				</div>
+				<div class="panel-body" ng-show="certExportPKCS12" ng-hide="!certExportPKCS12">
+					<div class="form-group">
+						<label class="col-md-3 control-label">Container Algorithm</label>
+						<div class="col-md-8">
+							<select name="containerAlgo" ng-model="certEncryptPKCS12Algo">
+								<option value="aes128">AES 128</option>
+								<option value="aes192">AES 192</option>
+								<option value="aes256">AES 256</option>
+								<option value="des">DES</option>
+								<option value="des3">3DES</option>
+								<option value="camellia128">Camellia 128</option>
+								<option value="camellia192">Camellia 192</option>
+								<option value="camellia256">Camellia 256</option>
+							</select>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 control-label">Container Password</label>
+						<div class="col-md-8">
+							<input type="password" class="form-control" ng-model="certContainerPassword">
+						</div>
+					</div>
+				</div>
+				</form>
+				<button type="button" class="btn btn-secondary" ng-click="clearForm();">Clear Form</button>
+			</div>
+		</div>
+	</div>
+	
+	<div id="viewLogInfo" class="modal fade" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h3>{{ currentLogTitle }}</h3>
+				</div>
+				<div class="modal-body">
+					<!--<pre style="white-space: pre-wrap">{{ currentLogData }}</pre>-->
+					<p ng-bind-html="currentLogData"></p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-md-10">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">Error Logs</h3>
+			</div>
+			<div class="panel-body">
+				<table class="table">
+					<thead>
+						<tr>
+							<th>Log Name</th>
+							<th>Actions</th>
+					</thead>
+					<tbody>
+						<tr ng-repeat="log in logs">
+							<td>{{ log }}</td>
+							<td>
+								<button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#viewLogInfo" ng-click="readLog(log, 'error');">View</button>
+								<button type="button" class="btn btn-sm btn-danger" ng-click="deleteLog(log);">Delete</button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+		
+	<div class="col-md-10">
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h3 class="panel-title">Change Log</h3>
+			</div>
+			<div class="panel-body">
+				<table class="table">
+				<thead>
+					<tr>
+					<th>Version</th>
+					<th>Actions</th>
+				</thead>
+				<tbody>
+					<tr ng-repeat="version in changelogs">
+						<td>{{ version }}</td>
+						<td>
+							<button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#viewLogInfo" ng-click="readLog(version, 'changelog');">View</button>
+						</td>
+					</tr>
+				</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
+
+</div>

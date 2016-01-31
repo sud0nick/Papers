@@ -1,0 +1,14 @@
+<strong>Encrypted</strong><br />
+Displays if the private key (.pem) is encrypted.  Does not include encryption on .pfx containers.
+<br /><br />
+
+<strong>PineSSL</strong><br />
+Uses the selected key pair for configuring SSL on the Pineapple.  If SSL is already configured the keys are swapped and the configuration is updated.
+<br /><br />
+
+<strong>Download</strong><br />
+Packages the keys in the selected row into a zip archive and downloads it.
+<br /><br />
+
+<strong>Delete</strong><br />
+Removes the selected keys from the SSL store.  This can't be undone.

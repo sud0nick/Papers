@@ -1,0 +1,10 @@
+<strong>SSL Certificate and Private Key</strong><br />
+Displays the keys currently being used by nginx on your Pineapple. These values are pulled directly from /etc/nginx/nginx.conf so they are always current.
+<br /><br />
+
+<strong>Dependencies</strong><br />
+The only dependency for Papers is zip which is downloaded via opkg. This is used to package certificates into a single archive for download.
+<br /><br />
+
+<strong>Remove SSL</strong><br />
+This reverts the Pineapple back to its original web configuration and removes all traces of SSL from the nginx config.  This does not affect the certificate store or any configuration in the Papers module.
