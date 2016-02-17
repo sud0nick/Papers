@@ -1,32 +1,33 @@
 registerController('PapersController', ['$api', '$scope', '$sce', function($api, $scope, $sce) {
 
-	$scope.certDaysValid		= "365";
-	$scope.certBitSize 		= "2048";
-	$scope.certSigAlgo		= "sha256";
-	$scope.certKeyName		= "";
-	$scope.certInfoCountry		= "";
-	$scope.certInfoState		= "";
-	$scope.certInfoLocality		= "";
-	$scope.certInfoOrganization	= "";
-	$scope.certInfoSection		= "";
-	$scope.certInfoCN		= "";
-	$scope.certEncryptKeysBool	= false;
-	$scope.certEncryptAlgo 		= "aes256";
-	$scope.certEncryptPassword	= "";
-	$scope.certExportPKCS12		= false;
+	$scope.certKeyType				= "tls_ssl";
+	$scope.certBitSize				= "2048";
+	$scope.certDaysValid			= "365";
+	$scope.certSigAlgo				= "sha256";
+	$scope.certKeyName				= "";
+	$scope.certInfoCountry			= "";
+	$scope.certInfoState			= "";
+	$scope.certInfoLocality			= "";
+	$scope.certInfoOrganization		= "";
+	$scope.certInfoSection			= "";
+	$scope.certInfoCN				= "";
+	$scope.certEncryptKeysBool		= false;
+	$scope.certEncryptAlgo			= "aes256";
+	$scope.certEncryptPassword		= "";
+	$scope.certExportPKCS12			= false;
 	$scope.certEncryptPKCS12Algo	= "aes256";
 	$scope.certContainerPassword	= "";
-	$scope.certificates		= "";
-	$scope.SSLStatus		= "";
-	$scope.showCertThrobber		= false;
-	$scope.showRemoveSSLButton	= true;
-	$scope.showUnSSLThrobber	= false;
-	$scope.logs			= "";
-	$scope.changelogs		= "";
-	$scope.currentLogTitle		= "";
-	$scope.currentLogData		= "";
-	$scope.dependsInstalled		= true;
-	$scope.dependsProcessing	= false;
+	$scope.certificates				= "";
+	$scope.SSLStatus				= "";
+	$scope.showCertThrobber			= false;
+	$scope.showRemoveSSLButton		= true;
+	$scope.showUnSSLThrobber		= false;
+	$scope.logs						= "";
+	$scope.changelogs				= "";
+	$scope.currentLogTitle			= "";
+	$scope.currentLogData			= "";
+	$scope.dependsInstalled			= true;
+	$scope.dependsProcessing		= false;
 
 	$scope.checkDepends = (function(){
 		$api.request({
@@ -68,77 +69,99 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 
 	$scope.buildCertificate = (function() {
 		var params = {};
-		params['bitSize'] = $scope.certBitSize;
-		params['sigalgo'] = $scope.certSigAlgo;
-
-		if ($scope.certInfoCountry != ''){
-			params['country'] = $scope.certInfoCountry;
-		}
-		if ($scope.certInfoState != '') {
-			params['state'] = $scope.certInfoState;
-		}
-		if ($scope.certInfoLocality != ''){
-			params['city'] = $scope.certInfoLocality;
-		}
-		if ($scope.certInfoOrganization != ''){
-			params['organization'] = $scope.certInfoOrganization;
-		}
-		if ($scope.certInfoSection != ''){
-			params['section'] = $scope.certInfoSection;
-		}
-		if ($scope.certInfoCN != ''){
-			params['commonName'] = $scope.certInfoCN;
-		}
-		if ($scope.certDaysValid != ''){
-			params['days'] = $scope.certDaysValid;
-		}
+		
 		if ($scope.certKeyName != ''){
 			params['keyName'] = $scope.certKeyName;
 		} else {
 			alert("You must enter a name for the keys!");
 			return;
 		}
-		if ($scope.certEncryptKeysBool === true) {
-			params['encrypt'] = "";
-			params['algo'] = $scope.certEncryptAlgo;
-			if (!$scope.certEncryptPassword) {
-				alert("You must set a password for the private key!");
-				return;
-			}
-			params['pkey_pass'] = $scope.certEncryptPassword;
-		}
-		if ($scope.certExportPKCS12 === true) {
-                        params['container'] = "pkcs12";
-                        params['c_algo'] = $scope.certEncryptPKCS12Algo;
-                        if (!$scope.certContainerPassword) {
-                                alert("You must enter a password for the exported container!");
-                                return;
-                        }
-                        params['c_pass'] = $scope.certContainerPassword;
-                }
 		
-		$('#buildKeysButton').css("display", "none");
-		$('#papersThrobber').css("display", "block");
-		$api.request({
-			module: 'Papers',
-			action: 'buildCert',
-			parameters: params
-		},function(response) {
-			$scope.getLogs();
-			if (response.success === true) {
+		params['bitSize'] = $scope.certBitSize;
+
+		if ($scope.certKeyType == "ssh") {
+			if ($scope.certEncryptKeysBool) {
+				if (!$scope.certEncryptPassword) {
+					alert("You must enter a password for the private key");
+					return;
+				}
+				params['pass'] = $scope.certEncryptPassword;
+			}
+			$('#buildKeysButton').css("display", "none");
+			$('#papersThrobber').css("display", "block");
+			$api.request({
+				module: 'Papers',
+				action: 'genSSHKeys',
+				parameters: params
+			},function(response){
+				$scope.getLogs();
 				$('#papersThrobber').css("display", "none");
 				$('#buildKeysButton').css("display", "block");
 				$scope.loadCertificates();
-			} else {
-				console.log(response.message);
-				// Add a message in the HTML to show responses
+				$api.reloadNavbar();
+			});
+		} else if ($scope.certKeyType == "tls_ssl") {
+			params['sigalgo'] = $scope.certSigAlgo;
+
+			if ($scope.certInfoCountry != ''){
+				params['country'] = $scope.certInfoCountry;
 			}
-			$api.reloadNavbar();
-		});
+			if ($scope.certInfoState != '') {
+				params['state'] = $scope.certInfoState;
+			}
+			if ($scope.certInfoLocality != ''){
+				params['city'] = $scope.certInfoLocality;
+			}
+			if ($scope.certInfoOrganization != ''){
+				params['organization'] = $scope.certInfoOrganization;
+			}
+			if ($scope.certInfoSection != ''){
+				params['section'] = $scope.certInfoSection;
+			}
+			if ($scope.certInfoCN != ''){
+				params['commonName'] = $scope.certInfoCN;
+			}
+			if ($scope.certDaysValid != ''){
+				params['days'] = $scope.certDaysValid;
+			}
+			if ($scope.certEncryptKeysBool === true) {
+				params['encrypt'] = "";
+				params['algo'] = $scope.certEncryptAlgo;
+				if (!$scope.certEncryptPassword) {
+					alert("You must set a password for the private key!");
+					return;
+				}
+				params['pkey_pass'] = $scope.certEncryptPassword;
+			}
+			if ($scope.certExportPKCS12 === true) {
+							params['container'] = "pkcs12";
+							params['c_algo'] = $scope.certEncryptPKCS12Algo;
+							if (!$scope.certContainerPassword) {
+									alert("You must enter a password for the exported container!");
+									return;
+							}
+							params['c_pass'] = $scope.certContainerPassword;
+					}
+		
+			$('#buildKeysButton').css("display", "none");
+			$('#papersThrobber').css("display", "block");
+			$api.request({
+				module: 'Papers',
+				action: 'buildCert',
+				parameters: params
+			},function(response) {
+				$scope.getLogs();
+				$('#papersThrobber').css("display", "none");
+				$('#buildKeysButton').css("display", "block");
+				$scope.loadCertificates();
+				$api.reloadNavbar();
+			});
+		}
 	});
 
 	$scope.clearForm = (function() {
-		$scope.certDaysValid            = "365";
+			$scope.certKeyType				= "tls_ssl";
+			$scope.certDaysValid			= "365";
 	        $scope.certBitSize              = "2048";
 	        $scope.certSigAlgo              = "sha256";
 	        $scope.certKeyName              = "";
@@ -157,26 +180,26 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 	});
 
 	$scope.loadCertificates = (function() {
-                $api.request({
-                        module: 'Papers',
-                        action: 'loadCertificates'
-                },function(response){
-                        if (response.success === true) {
-                                // Display certificate information
-                                $scope.certificates = response.data;
-                        } else {
-                                // Display error
+		$api.request({
+			module: 'Papers',
+			action: 'loadCertificates'
+		},function(response){
+			if (response.success === true) {
+				// Display certificate information
+				$scope.certificates = response.data;
+			} else {
+				// Display error
 				console.log("Failed to load certificates.");
-                        }
-                });
-        });
+			}
+		});
+	});
 
-	$scope.downloadKeys = (function(name) {
+	$scope.downloadKeys = (function(name,type) {
 		$scope.showCertThrobber = true;
 		$api.request({
 			module: 'Papers',
 			action: 'downloadKeys',
-			parameters: name
+			parameters: {name,type}
 		},function(response){
 			$scope.showCertThrobber = false;
 			if (response.success === true) {
@@ -200,38 +223,48 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 		});
 	});
 
-        $scope.deleteKeys = (function(cert) {
+	$scope.deleteKeys = (function(cert,type) {
 		if (confirm("Confirm key deletion by pressing OK") == false) {return;}
-		$scope.showCertThrobber = true;
-                $api.request({
-                        module: 'Papers',
-                        action: 'removeCertificate',
-                        certificate: cert
-                },function(response){
-			$scope.showCertThrobber = false;
-			$scope.getLogs();
-                        if (response.success === true) {
-                                $scope.loadCertificates();
-                        }
-                });
-        });
-
-	$scope.sslPineapple = (function(cert) {
 		$scope.showCertThrobber = true;
 		$api.request({
 			module: 'Papers',
-			action: 'sslPineapple',
-			certificate: cert
+			action: 'removeCertificate',
+			params: {cert,type}
+		},function(response){
+			$scope.showCertThrobber = false;
+			$scope.getLogs();
+			if (response.success === true) {
+				$scope.loadCertificates();
+			}
+		});
+	});
+
+	$scope.securePineapple = (function(cert,type) {
+		$scope.showCertThrobber = true;
+		$api.request({
+			module: 'Papers',
+			action: 'securePineapple',
+			params: {cert,type}
 		},function(response) {
 			$scope.showCertThrobber = false;
 			if (response.success === true) {
 				// Alert success
 				$scope.getNginxSSLCerts();
-				//alert("SSL configured successfully!\nPlease change the protocol in your address bar to https.");
 			} else {
 				// Alert error
 				alert(response.message);
 			}
+			$scope.loadCertificates();
+		});
+	});
+	
+	$scope.revokeSSHKey = (function(name){
+		$api.request({
+			module: 'Papers',
+			action: 'revokeSSHKey',
+			key: name
+		},function(response) {
+			$scope.loadCertificates();
 		});
 	});
 

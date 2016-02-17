@@ -4,6 +4,7 @@ namespace pineapple;
 define('__INCLUDES__', "/pineapple/modules/Papers/includes/");
 define('__SCRIPTS__', __INCLUDES__ . "scripts/");
 define('__SSLSTORE__', __INCLUDES__ . "ssl/");
+define('__SSHSTORE__', __INCLUDES__ . "ssh/");
 define('__LOGS__', __INCLUDES__ . "logs/");
 define('__CHANGELOGS__', __INCLUDES__ . "changelog/");
 define('__HELPFILES__', __INCLUDES__ . "help/");
@@ -25,26 +26,32 @@ class Papers extends Module
 			case 'buildCert':
 				$this->buildCert($this->request->parameters);
 				break;
+			case 'genSSHKeys':
+				$this->genSSHKeys($this->request->parameters);
+				break;
 			case 'loadCertificates':
 				$this->loadCertificates();
 				break;
 			case 'downloadKeys':
-				$this->downloadKeys($this->request->parameters);
+				$this->downloadKeys($this->request->parameters->name, $this->request->parameters->type);
 				break;
 			case 'clearDownloadArchive':
 				$this->clearDownloadArchive();
 				break;
 			case 'removeCertificate':
-				$this->removeCertificate($this->request->certificate);
+				$this->removeCertificate($this->request->params->cert, $this->request->params->type);
 				break;
-			case 'sslPineapple':
-				$this->SSLPineapple($this->request->certificate);
+			case 'securePineapple':
+				$this->securePineapple($this->request->params->cert, $this->request->params->type);
 				break;
 			case 'getNginxSSLCerts':
 				$this->getNginxSSLCerts();
 				break;
 			case 'unSSLPineapple':
 				$this->unSSLPineapple();
+				break;
+			case 'revokeSSHKey':
+				$this->revokeSSHKey($this->request->key);
 				break;
 			case 'getLogs':
 				$this->getLogs($this->request->type);
@@ -78,6 +85,32 @@ class Papers extends Module
 	private function removeDepends() {
 		// removeDepends.sh doesn't return anything whether successful or not
 		exec(__SCRIPTS__ . "removeDepends.sh");
+		$this->respond(true);
+	}
+	private function genSSHKeys($paramsObj) {
+		$keyInfo = array();
+		$params = (array)$paramsObj;
+		
+		$keyInfo['-k'] = $params['keyName'];
+		$keyInfo['-b'] = $params['bitSize'];
+		if (array_key_exists('pass', $params)) {
+			$keyInfo['-p'] = $params['pass'];
+		}
+		
+		// Build the argument string to pass to buildCert.sh
+		foreach ($keyInfo as $k => $v) {
+			$argString .= $k . " \"" . $v . "\" ";
+		}
+		$argString = rtrim($argString);
+		
+		$retData = array();
+		exec(__SCRIPTS__ . "genSSHKeys.sh " . $argString, $retData);
+		$res = implode("\n", $resData);
+		if ($res != "") {
+			$this->logError("Build SSH Key Error", "Failed to build SSH keys.  The following data was returned:\n" . $res);
+			$this->respond(false);
+			return;
+		}
 		$this->respond(true);
 	}
 	private function buildCert($paramsObj) {
@@ -181,12 +214,19 @@ class Papers extends Module
 	}
 
 	private function loadCertificates() {
-		$contents = scandir(__SSLSTORE__);
+		$certs = $this->getKeys(__SSLSTORE__);
+		$certs = array_merge($certs, $this->getKeys(__SSHSTORE__));
+		$this->respond(true,null,$certs);
+	}
+	
+	private function getKeys($dir) {
+		$keyType = ($dir == __SSLSTORE__) ? "TLS/SSL" : "SSH";
+		$keys = scandir($dir);
 		$certs = array();
-		foreach ($contents as $cert) {
-			if ($cert == "." || $cert == "..") {continue;}
+		foreach ($keys as $key) {
+			if ($key == "." || $key == "..") {continue;}
 
-			$parts = explode(".", $cert);
+			$parts = explode(".", $key);
 			$fname = $parts[0];
 			$type = "." . $parts[1];
 
@@ -199,16 +239,31 @@ class Papers extends Module
 				}
 			} else {
 				// Add a new object to the array
-				$enc = ($this->keyIsEncrypted($fname)) ? "Yes" : "No";
-				array_push($certs, (object)array('Name' => $fname, 'Type' => $type, 'Encrypted' => $enc));
+				$enc = ($this->keyIsEncrypted($fname, $keyType)) ? "Yes" : "No";
+				array_push($certs, (object)array('Name' => $fname, 'Type' => $type, 'Encrypted' => $enc, 'KeyType' => $keyType, 'Authorized' => $this->checkSSHKeyAuth($fname, $keyType)));
 			}
 		}
-		$this->respond(true,null,$certs,null);
+		return $certs;
+	}
+	
+	private function checkSSHKeyAuth($keyName, $keyType) {
+		if ($keyType != "SSH") {return false;}
+		$res = exec(__SCRIPTS__ . "checkSSHKey.sh -k " . $keyName);
+		if ($res == "TRUE") {
+			return true;
+		}
+		return false;
+	}
+	
+	private function revokeSSHKey($keyName) {
+		exec(__SCRIPTS__ . "revokeSSHKey.sh -k " . $keyName);
+		$this->respond(true);
 	}
 
-	private function keyIsEncrypted($keyName) {
+	private function keyIsEncrypted($keyName, $keyType) {
 		$data = array();
-		exec(__SCRIPTS__ . "testEncrypt.sh -k " . $keyName . " 2>&1", $data);
+		$keyDir = ($keyType == "SSH") ? __SSHSTORE__ : __SSLSTORE__;
+		exec(__SCRIPTS__ . "testEncrypt.sh -k " . $keyName . " -d " . $keyDir . " 2>&1", $data);
 		if ($data[0] == "writing RSA key") {
 			return false;
 		} else if ($data[0] == "unable to load Private Key") {
@@ -216,28 +271,28 @@ class Papers extends Module
 		}
 	}
 
-	private function downloadKeys($keyName) {
+	private function downloadKeys($keyName, $keyType) {
 		$argString = "-o " . $keyName . ".zip -f \"";
 
 		// Grab all of the keys, certs, and containers
-		$contents = scandir(__SSLSTORE__);
-                $certs = array();
-                foreach ($contents as $cert) {
-                        if ($cert == "." || $cert == "..") {continue;}
-
-                        $parts = explode(".", $cert);
-                        $fname = $parts[0];
-                        $type = "." . $parts[1];
+		$keyDir = ($keyType == "SSH") ? __SSHSTORE__ : __SSLSTORE__;
+		$contents = scandir($keyDir);
+		$certs = array();
+		foreach ($contents as $cert) {
+			if ($cert == "." || $cert == "..") {continue;}
+			$parts = explode(".", $cert);
+			$fname = $parts[0];
+			$type = "." . $parts[1];
 			
 			if ($fname == $keyName) {
 				$argString .= $cert ." ";
 			}
-                }
+		}
 		$argString = rtrim($argString);
 		$argString .= "\"";
 
 		// Pack them into an archive
-		exec(__SCRIPTS__ . "packKeys.sh " . $argString);
+		exec(__SCRIPTS__ . "packKeys.sh " . $keyDir . " " . $argString);
 
 		// Check if the files were archived properly
 		$archiveExists = False;
@@ -276,14 +331,14 @@ class Papers extends Module
 		return False;
 	}
 
-	private function removeCertificate($delCert) {
+	private function removeCertificate($delCert, $keyType) {
 		$res = True;
 		$msg = "Failed to delete the following files:";
-		$files = scandir(__SSLSTORE__);
-		foreach (scandir(__SSLSTORE__) as $cert) {
+		$keyDir = ($keyType == "SSH") ? __SSHSTORE__ : __SSLSTORE__;
+		foreach (scandir($keyDir) as $cert) {
 			if ($cert == "." || $cert == "..") {continue;}
 			if (explode(".",$cert)[0] == $delCert) {
-				if (!unlink(__SSLSTORE__ . $cert)) {
+				if (!unlink($keyDir . $cert)) {
 					$res = False;
 					$msg .= " " . $cert;
 				}
@@ -347,6 +402,18 @@ class Papers extends Module
 		$this->respond($status);
 	}
 
+	private function securePineapple($certName, $keyType) {
+		// Check the key type to determine whether we are adding an SSH key or SSL keys
+		if ($keyType == "SSH") {
+			// Modify authorized_keys file
+			exec(__SCRIPTS__ . "addSSHKey.sh -k " . $certName);
+			$this->respond(true);
+		} else {
+			// Update SSL configs
+			$this->SSLPineapple($certName);
+		}
+	}
+	
 	private function SSLPineapple($certName) {
 		// Check if nginx SSL directory exists
 		$nginx_ssl_dir = "/etc/nginx/ssl/";

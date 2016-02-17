@@ -54,6 +54,7 @@
 							<thead>
 								<tr>
 									<th>Name</th>
+									<th>Type</th>
 									<th>Files</th>
 									<th>Encrypted</th>
 									<th>Actions</th>
@@ -63,12 +64,14 @@
 							<tbody>
 								<tr ng-repeat="(index,data) in certificates">
 									<td>{{ data.Name }}</td>
+									<td>{{ data.KeyType }}</td>
 									<td>{{ data.Type }}</td>
 									<td>{{ data.Encrypted }}</td>
 									<td>
-										<button type="button" class="btn btn-sm btn-success" ng-click="sslPineapple(data.Name);">PineSSL</button>
-										<button type="button" class="btn btn-sm btn-info" ng-click="downloadKeys(data.Name);">&darr;</button>
-										<button type="button" class="btn btn-sm btn-danger" ng-click="deleteKeys(data.Name);">X</button>
+										<button type="button" class="btn btn-sm btn-danger" ng-show="data.Authorized==true" ng-click="revokeSSHKey(data.Name);">&#x1f512;</button>
+										<button type="button" class="btn btn-sm btn-success" ng-show="data.Authorized==false" ng-click="securePineapple(data.Name, data.KeyType);">&#x1f512;</button>
+										<button type="button" class="btn btn-sm btn-info" ng-click="downloadKeys(data.Name, data.KeyType);">&darr;</button>
+										<button type="button" class="btn btn-sm btn-danger" ng-click="deleteKeys(data.Name, data.KeyType);">X</button>
 									</td>
 								</tr>
 							</tbody>
@@ -99,9 +102,14 @@
 					<button type="button" class="btn" data-toggle="modal" data-target="#viewLogInfo" ng-click="readLog('build.help','help');">?</button>
 				</div>
 				<div class="form-group">
-					<label class="col-md-3 control-label">Days Valid</label>
+					<label class="col-md-3 control-label">Key Type</label>
 					<div class="col-md-8">
-						<input type="text" class="form-control" ng-model="certDaysValid" placeholder="365">
+						<div class="col-md-3">
+							<label><input type="radio" ng-model="certKeyType" value="tls_ssl" name="certKeyType"> TLS/SSL</label>
+						</div>
+						<div class="col-md-3">
+							<label><input type="radio" ng-model="certKeyType" value="ssh" name="certKeyType"> SSH</label><br />
+						</div>
 					</div>
 				</div>
 				<div class="form-group">
@@ -119,6 +127,18 @@
 					</div>
 				</div>
 				<div class="form-group">
+					<label class="col-md-3 control-label">Key Pair Name</label>
+					<div class="col-md-8">
+						<input type="text" class="form-control" ng-model="certKeyName" placeholder="Name of exported keys">
+					</div>
+				</div>
+				<div class="form-group" ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'">
+					<label class="col-md-3 control-label">Days Valid</label>
+					<div class="col-md-8">
+						<input type="text" class="form-control" ng-model="certDaysValid" placeholder="365">
+					</div>
+				</div>
+				<div class="form-group" ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'">
 					<label class="col-md-3 control-label">Signature Algorithm</label>
 					<div class="col-md-8">
 						<select name="sigalgo" ng-model="certSigAlgo" required>
@@ -128,19 +148,13 @@
 						</select>
 					</div>
 				</div>
-				<div class="form-group">
-					<label class="col-md-3 control-label">Key Pair Name</label>
-					<div class="col-md-8">
-						<input type="text" class="form-control" ng-model="certKeyName" placeholder="Name of exported keys">
-					</div>
-				</div>
 
 				<!--
 					TODO: Make this able to save certificate info settings as defaults.  In the future
 					allow for the saving of certificate info profiles that way certs can be quickly made for recurring
 					situations.
 				-->
-				<h3 class="panel-title">
+				<h3 class="panel-title" ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'">
 					<a href="javascript:;" data-target="#collapseCertInfoGroup" ng-click="collapsed=!collapsed">Certificate Info</a>
 				</h3>
 				<div class="panel-body">
@@ -189,7 +203,7 @@
 					</div>
 				</div>
 				<div class="panel-body" ng-show="certEncryptKeysBool" ng-hide="!certEncryptKeysBool">
-					<div class="form-group">
+					<div class="form-group" ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'">
 						<label class="col-md-3 control-label">Algorithm</label>
 						<div class="col-md-8">
 							<select name="algo" ng-model="certEncryptAlgo">
@@ -211,7 +225,7 @@
 						</div>
 					</div>
 				</div>
-				<div class="form-group">
+				<div class="form-group" ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'">
 					<div class="col-md-8">
 						<label>Export keys to PKCS#12 container? <input type="checkbox" ng-model="certExportPKCS12"></label>
 					</div>

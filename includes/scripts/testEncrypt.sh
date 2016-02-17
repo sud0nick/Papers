@@ -6,6 +6,7 @@ help() {
         echo '';
         echo 'Parameters:';
         echo '';
+	echo -e '\t-d:\tDirectory where key resides';
         echo -e '\t-k:\tName of key to test';
         echo '';
 }
@@ -15,8 +16,8 @@ if  [ "$#" -lt 2 ]; then
         exit;
 fi
 
-SSL_STORE="/pineapple/modules/Papers/includes/ssl/";
-KEY="";
+KEY=''
+KEYDIR=''
 
 while [ "$#" -gt 0 ]
 do
@@ -24,8 +25,11 @@ do
 if [[ "$1" == "-k" ]]; then
 	KEY="$2.pem"
 fi
+if [[ "$1" == "-d" ]]; then
+        KEYDIR="$2"
+fi
 
 shift
 done;
 
-openssl rsa -in $SSL_STORE$KEY -passin pass: | awk 'NR==0;'
+openssl rsa -in $KEYDIR$KEY -passin pass: | awk 'NR==0;'
