@@ -69,7 +69,7 @@
 									<td>{{ data.Encrypted }}</td>
 									<td>
 										<button type="button" class="btn btn-sm btn-danger" ng-show="data.Authorized==true" ng-click="revokeSSHKey(data.Name);">&#x1f512;</button>
-										<button type="button" class="btn btn-sm btn-success" ng-show="data.Authorized==false" ng-click="securePineapple(data.Name, data.KeyType);">&#x1f512;</button>
+										<button type="button" class="btn btn-sm btn-success" ng-class="{'disabled' : data.Encrypted == 'Yes' && data.KeyType == 'TLS/SSL'}" ng-show="data.Authorized==false" ng-click="securePineapple(data.Name, data.KeyType);">&#x1f512;</button>
 										<button type="button" class="btn btn-sm btn-info" ng-click="downloadKeys(data.Name, data.KeyType);">&darr;</button>
 										<button type="button" class="btn btn-sm btn-danger" ng-click="deleteKeys(data.Name, data.KeyType);">X</button>
 									</td>
