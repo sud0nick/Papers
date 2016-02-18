@@ -105,7 +105,7 @@ class Papers extends Module
 		
 		$retData = array();
 		exec(__SCRIPTS__ . "genSSHKeys.sh " . $argString, $retData);
-		$res = implode("\n", $resData);
+		$res = implode("\n", $retData);
 		if ($res != "") {
 			$this->logError("Build SSH Key Error", "Failed to build SSH keys.  The following data was returned:\n" . $res);
 			$this->respond(false);
