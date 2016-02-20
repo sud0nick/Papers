@@ -1,6 +1,7 @@
 registerController('PapersController', ['$api', '$scope', '$sce', function($api, $scope, $sce) {
 
 	$scope.certKeyType				= "tls_ssl";
+	$scope.certKeyComment			= "";
 	$scope.certBitSize				= "2048";
 	$scope.certDaysValid			= "365";
 	$scope.certSigAlgo				= "sha256";
@@ -86,6 +87,9 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 					return;
 				}
 				params['pass'] = $scope.certEncryptPassword;
+			}
+			if ($scope.certKeyComment != "") {
+				params['comment'] = $scope.certKeyComment;
 			}
 			$('#buildKeysButton').css("display", "none");
 			$('#papersThrobber').css("display", "block");

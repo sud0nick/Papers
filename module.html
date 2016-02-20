@@ -132,6 +132,12 @@
 						<input type="text" class="form-control" ng-model="certKeyName" placeholder="Name of exported keys">
 					</div>
 				</div>
+				<div class="form-group" ng-show="certKeyType=='ssh'" ng-hide="certKeyType=='tls_ssl'">
+					<label class="col-md-3 control-label">Comment</label>
+					<div class="col-md-8">
+						<input type="text" class="form-control" ng-model="certKeyComment" placeholder="root@Pineapple">
+					</div>
+				</div>
 				<div class="form-group" ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'">
 					<label class="col-md-3 control-label">Days Valid</label>
 					<div class="col-md-8">

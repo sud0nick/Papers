@@ -96,6 +96,9 @@ class Papers extends Module
 		if (array_key_exists('pass', $params)) {
 			$keyInfo['-p'] = $params['pass'];
 		}
+		if (array_key_exists('comment', $params)) {
+			$keyInfo['-c'] = $params['comment'];
+		}
 		
 		// Build the argument string to pass to buildCert.sh
 		foreach ($keyInfo as $k => $v) {
@@ -158,9 +161,9 @@ class Papers extends Module
 		}
 		$argString = rtrim($argString);
 		
-		$resData = array();
-		exec(__SCRIPTS__ . "buildCert.sh " . $argString, $resData);
-		$res = implode("\n", $resData);
+		$retData = array();
+		exec(__SCRIPTS__ . "buildCert.sh " . $argString, $retData);
+		$res = implode("\n", $retData);
 		if ($res != "Complete") {
 			$this->logError("Build Certificate Error", "The key pair failed with the following error from the console:\n\n" . $res);
 			$this->respond(false, "Failed to build key pair.  Check the logs for details.");
@@ -201,9 +204,9 @@ class Papers extends Module
 			$argString = rtrim($argString);
 
 			// Execute encryptKeys.sh with the parameters and check for errors
-			$resData = array();
-			exec(__SCRIPTS__ . "encryptKeys.sh " . $argString, $resData);
-			$res = implode("\n", $resData);
+			$retData = array();
+			exec(__SCRIPTS__ . "encryptKeys.sh " . $argString, $retData);
+			$res = implode("\n", $retData);
 			if ($res != "Complete") {
 				$this->logError("Certificate Encryption Error", "The public and private keys were generated successfully but encryption failed with the following error:\n\n" . $res);
 				$this->respond(false, "Build finished with errors.  Check the logs for details.");
