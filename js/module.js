@@ -6,6 +6,7 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 	$scope.certDaysValid			= "365";
 	$scope.certSigAlgo				= "sha256";
 	$scope.certKeyName				= "";
+	$scope.modifyCertInfo			= false;
 	$scope.certInfoCountry			= "";
 	$scope.certInfoState			= "";
 	$scope.certInfoLocality			= "";
