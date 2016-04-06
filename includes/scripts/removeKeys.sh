@@ -3,5 +3,9 @@
 #  Author: sud0nick
 #  Date:   Jan 2016
 
-rm -rf /etc/nginx/ssl/*;
-ls /etc/nginx/ssl/;
+SSL_DIR="/etc/nginx/ssl/";
+
+while [[ $# -gt 0 ]]; do
+	rm -rf $SSL_DIR$1;
+	shift;
+done

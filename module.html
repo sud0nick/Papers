@@ -91,21 +91,21 @@
 
 	<div class="col-md-12">
 		<div class="panel panel-default" style="border-radius: 7px;">
-			<div class="panel-heading">
+			<div class="panel-heading pointer" data-toggle="collapse" data-target="#papers_certBuilder">
 				<table style="width: 100%">
 					<tr><td align="left">
 						<h3 class="panel-title">Build Certificates</h3>
 					</td><td align="right">
 						<span class="panel-title">
-							<button id="buildKeysButton" style="display:block" type="button" class="btn btn-success" ng-click="buildCertificate();">Build Keys</button>
-							<img id="papersThrobber" style="display:none" src='/img/throbber.gif'/>
+							<img ng-show="showBuildThrobber" ng-hide="!showBuildThrobber" src='/img/throbber.gif'/>
 						</span>
 					</td></tr>
 				</table>
 			</div>
-			<div class="panel-body">
+			<div class="panel-body panel-collapse collapse" id="papers_certBuilder">
 				<form class="form-horizontal">
 				<div style="width: 100%; text-align: right">
+					<button type="button" class="btn btn-success" ng-class="{'disabled' : showBuildThrobber}" ng-click="buildCertificate();">Build Keys</button>
 					<button type="button" class="btn" data-toggle="modal" data-target="#viewLogInfo" ng-click="readLog('build.help','help');">?</button>
 				</div>
 				<div class="form-group">
@@ -290,10 +290,10 @@
 
 	<div class="col-md-12">
 		<div class="panel panel-default">
-			<div class="panel-heading">
+			<div class="panel-heading pointer" data-toggle="collapse" data-target="#papers_errorLogs">
 				<h3 class="panel-title">Error Logs</h3>
 			</div>
-			<div class="panel-body">
+			<div class="panel-body panel-collapse collapse" id="papers_errorLogs">
 				<table class="table">
 					<thead>
 						<tr>
@@ -316,10 +316,10 @@
 		
 	<div class="col-md-12">
 		<div class="panel panel-default">
-			<div class="panel-heading">
-				<a href="javascript:;" data-target="#collapseChangeLog" ng-click="collapsed=!collapsed"><h3 class="panel-title">Change Log</h3></a>
+			<div class="panel-heading pointer" data-toggle="collapse" data-target="#papers_changelog">
+				<h3 class="panel-title">Change Log</h3>
 			</div>
-			<div id="collapseChangeLog" class="panel-collapse collapse in" ng-show="collapsed">
+			<div id="papers_changelog" class="panel-body panel-collapse collapse">
 				<table class="table">
 				<thead>
 					<tr>

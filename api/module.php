@@ -359,16 +359,14 @@ class Papers extends Module
 		if ($res == "") {
 			$this->respond(false, array("[!] SSL keys not configured in nginx.conf"));
 		} else {
-			$res = str_replace("/", "", $res);
 			$this->respond(true, null, explode(" ", $res));
 		}
 	}
 
 	private function checkSSLConfig() {
 		$retData = array();
-                exec("cat /etc/nginx/nginx.conf | grep -Eo '/[a-zA-Z0-9]*.cer|/[a-zA-Z0-9]*.pem'", $retData);
-                $res = implode(" ", $retData);
-		return $res;
+		exec(__SCRIPTS__ . "readKeys.sh", $retData);
+		return implode(" ", $retData);
 	}
 
 	private function unSSLPineapple() {
@@ -378,30 +376,20 @@ class Papers extends Module
 			return;
 		}
 
-		// This function removethe ssl/ directory from /etc/nginx/
-		// and replaces the current nginx.conf with the original
+		// Remove the keys from /etc/nginx/ssl/ and delete the directory
 		$status = True;
 		if (!$this->removeKeysFromNginx()) {
 			$status = False;
 			$this->logError("UnSSLPineapple", "Failed to remove keys from /etc/nginx/ssl/.");
 		}
-		if (!rmdir("/etc/nginx/ssl/")) {
-			$status = False;
-			$this->logError("UnSSLPineapple", "Failed to remove /etc/nginx/ssl/ directory.");
-		}
 
-		// Have to do this because for some reason copy() doesn't work
-		// and neither does using a shell script to copy to /etc/nginx/
-		$old_conf = fopen("/etc/nginx/nginx.conf", "w");
-		$new_conf = file_get_contents(__INCLUDES__ . "nginx.conf");
-		fwrite($old_conf, $new_conf);
-		fclose($old_conf);
-
-		if ($this->checkSSLConfig() != "") {
+		// Remove the configurations from /etc/nginx/nginx.conf
+		$retData = array();
+		exec("python " . __SCRIPTS__ . "cfgNginx.py --remove", $retData);
+		if (implode("", $retData) != "Complete") {
 			$status = False;
-			$this->logError("UnSSLPineapple", "Failed to copy original nginx.conf file back to /etc/nginx/.  At this point the Nginx SSL directory has been deleted so it is important to get the original configuration file back in its proper place.  Go to /pineapple/modules/Papers/includes/ and copy nginx.conf to /etc/nginx/ then issue the command '/etc/init.d/nginx reload'.");
+			$this->logError("UnSSLPineapple", "Failed to remove SSL configurations from /etc/nginx/nginx.conf");
 		}
-		exec("/etc/init.d/nginx reload");
 		$this->respond($status);
 	}
 
@@ -443,14 +431,14 @@ class Papers extends Module
 
 		// Call the nginx configuration script cfgNginx.py
 		$retData = array();
-		$res = exec("python " . __SCRIPTS__ . "cfgNginx.py " . $certName, $retData);
-		if ($res == "Complete") {
+		exec("python " . __SCRIPTS__ . "cfgNginx.py --add -k " . $certName, $retData);
+		if (implode("", $retData) == "Complete") {
 			$this->respond(true);
 			return;
 		}
 	
 		// Log whatever message came from cfgNginx.py and return False
-		$this->logError("SSL Config Failure", $retData);
+		$this->logError("SSL Config Failure", implode("", $retData));
 		$this->respond(false, "An error occurred.  Check the logs for details.");
 	}
 
@@ -465,8 +453,8 @@ class Papers extends Module
 		}
 
 		$retData = array();
-		$res = exec(__SCRIPTS__ . "replaceKeys.sh " . $certName, $retData);
-		if (!$res) {
+		exec("python " . __SCRIPTS__ . "cfgNginx.py --replace -k " . $certName, $retData);
+		if (implode("", $retData) == "Complete") {
 			$this->respond(true);
 			return;
 		}
@@ -485,8 +473,9 @@ class Papers extends Module
 		return True;
 	}
 	private function removeKeysFromNginx() {
+		$keys = $this->checkSSLConfig();
 		$retData = array();
-		$res = exec(__SCRIPTS__ . "removeKeys.sh", $retData);
+		$res = exec(__SCRIPTS__ . "removeKeys.sh {$keys}", $retData);
 		if ($res) {
 			$this->logError("Key Removal Failed", "Old keys may still exist in /etc/nginx/ssl/.  Continuing process anyway...");
 			return False;

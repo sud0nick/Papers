@@ -20,8 +20,9 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 	$scope.certEncryptPKCS12Algo	= "aes256";
 	$scope.certContainerPassword	= "";
 	$scope.certificates				= "";
-	$scope.SSLStatus				= "";
+	$scope.SSLStatus				= ['Loading...'];
 	$scope.showCertThrobber			= false;
+	$scope.showBuildThrobber		= false;
 	$scope.showRemoveSSLButton		= true;
 	$scope.showUnSSLThrobber		= false;
 	$scope.logs						= "";
@@ -92,16 +93,14 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 			if ($scope.certKeyComment != "") {
 				params['comment'] = $scope.certKeyComment;
 			}
-			$('#buildKeysButton').css("display", "none");
-			$('#papersThrobber').css("display", "block");
+			$scope.showBuildThrobber = true;
 			$api.request({
 				module: 'Papers',
 				action: 'genSSHKeys',
 				parameters: params
 			},function(response){
 				$scope.getLogs();
-				$('#papersThrobber').css("display", "none");
-				$('#buildKeysButton').css("display", "block");
+				$scope.showBuildThrobber = false;
 				$scope.loadCertificates();
 				$api.reloadNavbar();
 			});
@@ -148,16 +147,14 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 							params['c_pass'] = $scope.certContainerPassword;
 					}
 		
-			$('#buildKeysButton').css("display", "none");
-			$('#papersThrobber').css("display", "block");
+			$scope.showBuildThrobber = true;
 			$api.request({
 				module: 'Papers',
 				action: 'buildCert',
 				parameters: params
 			},function(response) {
 				$scope.getLogs();
-				$('#papersThrobber').css("display", "none");
-				$('#buildKeysButton').css("display", "block");
+				$scope.showBuildThrobber = false;
 				$scope.loadCertificates();
 				$api.reloadNavbar();
 			});
@@ -254,7 +251,7 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 			$scope.showCertThrobber = false;
 			if (response.success === true) {
 				// Alert success
-				$scope.getNginxSSLCerts();
+				$scope.redirect("https");
 			} else {
 				// Alert error
 				alert(response.message);
@@ -272,6 +269,18 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 			$scope.loadCertificates();
 		});
 	});
+	
+	$scope.redirect = (function(proto){
+		loc = window.location.href.split(":");
+		if (loc[0] == proto) {
+			alert("Success! Refreshing your browser now!");
+			window.location.reload();			
+		} else {
+			loc[0] = proto;
+			alert("Success!  Redirecting to " + loc.join(":") + "!");
+			window.location = loc.join(":");
+		}
+	});
 
 	$scope.unSSLPineapple = (function(){
 		$scope.showRemoveSSLButton = false;
@@ -285,6 +294,7 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 			$scope.refresh();
 			
 			if (response.success === true) {
+				$scope.redirect("http");
 			} else {
 			}
 		});
