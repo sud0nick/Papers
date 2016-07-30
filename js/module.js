@@ -250,8 +250,10 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 		},function(response) {
 			$scope.showCertThrobber = false;
 			if (response.success === true) {
-				// Alert success
-				$scope.redirect("https");
+				// Redirect if key type is TLS/SSL
+				if (type == "TLS/SSL") {
+					$scope.redirect("https");
+				}
 			} else {
 				// Alert error
 				alert(response.message);
