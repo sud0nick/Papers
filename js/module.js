@@ -1,4 +1,4 @@
-registerController('PapersController', ['$api', '$scope', '$sce', function($api, $scope, $sce) {
+registerController('PapersController', ['$api', '$scope', '$sce', '$http', function($api, $scope, $sce, $http) {
 
 	$scope.certKeyType				= "tls_ssl";
 	$scope.certKeyComment			= "";
@@ -31,6 +31,8 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 	$scope.currentLogData			= "";
 	$scope.dependsInstalled			= true;
 	$scope.dependsProcessing		= false;
+	$scope.selectedFiles			= [];
+	$scope.uploading				= false;
 
 	$scope.checkDepends = (function(){
 		$api.request({
@@ -51,11 +53,11 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 			module: 'Papers',
 			action: 'installDepends'
 		},function(response){
-			$scope.dependsProcessing = false;
 			$scope.checkDepends();
 			if (response.success === false) {
 				alert("Failed to install dependencies.  Make sure you are connected to the internet.");
 			}
+			$scope.dependsProcessing = false;
 		});
 	});
 
@@ -65,8 +67,8 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 			module: 'Papers',
 			action: 'removeDepends'
 		},function(response){
-			$scope.dependsProcessing = false;
 			$scope.checkDepends();
+			$scope.dependsProcessing = false;
 		});
 	});
 
@@ -369,7 +371,49 @@ registerController('PapersController', ['$api', '$scope', '$sce', function($api,
 	        $scope.getNginxSSLCerts();
 	        $scope.loadCertificates();
 	});
-
+	
+	// Upload functions
+	$scope.setSelectedFiles = (function(){
+		files = document.getElementById("selectedFiles").files;
+		for (var x = 0; x < files.length; x++) {
+			$scope.selectedFiles.push(files[x]);
+		}
+	});
+	
+	$scope.removeSelectedFile = (function(file){
+		var x = $scope.selectedFiles.length;
+		while (x--) {
+			if ($scope.selectedFiles[x] === file) {
+				$scope.selectedFiles.splice(x,1);
+			}
+		}
+	});
+	
+	$scope.uploadFile = (function(){
+		$scope.uploading = true;
+		
+		var fd = new FormData();
+		for (x = 0; x < $scope.selectedFiles.length; x++) {
+			fd.append($scope.selectedFiles[x].name, $scope.selectedFiles[x]);
+		}
+		$http.post("/modules/Papers/api/module.php", fd, {
+			transformRequest: angular.identity,
+			headers: {'Content-Type': undefined}
+		}).success(function(response) {
+			for (var key in response) {
+				if (response.hasOwnProperty(key)) {
+					if (response.key == "Failed") {
+						alert("Failed to upload " + key);
+					}
+				}
+			}
+			$scope.selectedFiles = [];
+			$scope.refresh();
+			$scope.uploading = false;
+		});
+	});
+	
+	// Init
 	$scope.checkDepends();
 	$scope.refresh();
 }])

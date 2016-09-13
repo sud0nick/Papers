@@ -3,7 +3,7 @@ Displays the keys currently being used by nginx on your Pineapple. These values 
 <br /><br />
 
 <strong>Dependencies</strong><br />
-The only dependency for Papers is zip which is downloaded via opkg. This is used to package certificates into a single archive for download.
+The only dependencies for Papers are zip and unzip which are downloaded via opkg. They are used to pack, and unpack, certificate archives for download/upload.
 <br /><br />
 
 <strong>Remove SSL</strong><br />

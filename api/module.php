@@ -9,6 +9,47 @@ define('__LOGS__', __INCLUDES__ . "logs/");
 define('__CHANGELOGS__', __INCLUDES__ . "changelog/");
 define('__HELPFILES__', __INCLUDES__ . "help/");
 define('__DOWNLOAD__', __INCLUDES__ . "download/");
+define('__UPLOAD__', __INCLUDES__ . "upload/");
+
+/*
+	Determine the type of file that has been uploaded and move it to the appropriate
+	directory.  If it's a .zip it is an injection set and will be unpacked.  If it is
+	an .exe it will be moved to __WINDL__, etc.
+*/
+if (!empty($_FILES)) {
+	$response = [];
+	foreach ($_FILES as $file) {
+		$tempPath = $file[ 'tmp_name' ];
+		$name = $file['name'];
+		$type = pathinfo($file['name'], PATHINFO_EXTENSION);
+		
+		// Do not accept any file other than .zip
+		if ($type != "zip") {
+			continue;
+		}
+		
+		// Ensure the upload directory exists
+		if (!file_exists(__UPLOAD__)) {
+			if (!mkdir(__UPLOAD__, 0755, true)) {
+				Papers::logError("Failed Upload", "Failed to upload " . $file['name'] . " because the directory structure could not be created");
+			}
+		}
+		
+		$uploadPath = __UPLOAD__ . $name;
+		$res = move_uploaded_file( $tempPath, $uploadPath );
+		
+		if ($res) {
+			// Unpack the key archive and move the keys to their appropriate directories
+			exec(__SCRIPTS__ . "/unpackKeyArchive.sh -f " . explode(".", $name)[0]);
+			$response[$name] = "Success";
+		} else {
+			$response[$name] = "Failed";
+		}
+	}
+	echo json_encode($response);
+	die();
+}
+
 
 class Papers extends Module
 {

@@ -5,6 +5,35 @@
 	font-weight: normal;
 }
 </style>
+
+<script>
+
+$(document).on('mouseenter', '.papers_hoverSuccess', function() {
+	$(this).addClass("btn-success");
+}).on('mouseleave', '.papers_hoverSuccess', function(){
+	$(this).removeClass("btn-success");
+});
+
+$(document).on('mouseenter', '.papers_hoverPrimary', function() {
+	$(this).addClass("btn-primary");
+}).on('mouseleave', '.papers_hoverPrimary', function(){
+	$(this).removeClass("btn-primary");
+});
+
+$(document).on('mouseenter', '.papers_hoverInfo', function() {
+	$(this).addClass("btn-info");
+}).on('mouseleave', '.papers_hoverInfo', function(){
+	$(this).removeClass("btn-info");
+});
+
+$(document).on('mouseenter', '.papers_hoverDanger', function() {
+	$(this).addClass("btn-danger");
+}).on('mouseleave', '.papers_hoverDanger', function(){
+	$(this).removeClass("btn-danger");
+});
+
+</script>
+
 <div class="row" ng-controller="PapersController">
 	<div class="col-md-12">
 		<div class="container-fluid">
@@ -37,8 +66,8 @@
 						</div><br />
 						<div>
 							<strong>Dependencies</strong><br />
-							<button type="button" class="btn btn-success" ng-show="!dependsInstalled" ng-hide="dependsInstalled" ng-click="installDepends();">Install</button>
-							<button type="button" class="btn btn-danger" ng-show="dependsInstalled" ng-hide="!dependsInstalled" ng-click="removeDepends();">Uninstall</button>
+							<button type="button" class="btn btn-success" ng-show="!dependsInstalled" ng-disabled="dependsProcessing" ng-hide="dependsInstalled" ng-click="installDepends();"><img src="/modules/Papers/includes/icons/glyphicons-182-download-alt.png"/>&nbsp;&nbsp;Install</button>
+							<button type="button" class="btn papers_hoverDanger" ng-show="dependsInstalled" ng-disabled="dependsProcessing" ng-hide="!dependsInstalled" ng-click="removeDepends();"><img src="/modules/Papers/includes/icons/glyphicons-198-remove-circle.png"/>&nbsp;&nbsp;Uninstall</button>
 							<img ng-show="dependsProcessing" ng-hide="!dependsProcessing" src='/img/throbber.gif'/>
 						</div><br />
 					</div>
@@ -59,6 +88,11 @@
 					</td></tr>
 				</table>
 			</div>
+			
+			<div style="margin-top: 10px; margin-left: 10px">
+				<button type="button" class="btn papers_hoverInfo" data-toggle="modal" data-target="#papers_uploaderView"><img src="/modules/Papers/includes/icons/glyphicons-202-upload.png"/>&nbsp;&nbsp;Upload Keys</button>
+			</div>
+			
 			<div class="table-responsive table-dropdown">
 				<table class="table">
 					<thead>
@@ -77,10 +111,10 @@
 							<td>{{ data.Type }}</td>
 							<td>{{ data.Encrypted }}</td>
 							<td>
-								<button type="button" class="btn btn-sm btn-danger" ng-show="data.Authorized==true" ng-click="revokeSSHKey(data.Name);">&#x1f512;</button>
-								<button type="button" class="btn btn-sm btn-success" ng-class="{'disabled' : data.Encrypted == 'Yes' && data.KeyType == 'TLS/SSL'}" ng-show="data.Authorized==false" ng-click="securePineapple(data.Name, data.KeyType);">&#x1f512;</button>
-								<button type="button" class="btn btn-sm btn-info" ng-click="downloadKeys(data.Name, data.KeyType);">&darr;</button>
-								<button type="button" class="btn btn-sm btn-danger" ng-click="deleteKeys(data.Name, data.KeyType);">X</button>
+								<button type="button" class="btn btn-sm papers_hoverDanger" ng-show="data.Authorized==true" ng-click="revokeSSHKey(data.Name);"><img src="/modules/Papers/includes/icons/glyphicons-205-unlock.png"/></button>
+								<button type="button" class="btn btn-sm papers_hoverSuccess" ng-disabled="data.Encrypted == 'Yes' && data.KeyType == 'TLS/SSL'" ng-show="data.Authorized==false" ng-click="securePineapple(data.Name, data.KeyType);"><img src="/modules/Papers/includes/icons/glyphicons-204-lock.png"/></button>
+								<button type="button" class="btn btn-sm papers_hoverInfo" ng-click="downloadKeys(data.Name, data.KeyType);"><img src="/modules/Papers/includes/icons/glyphicons-201-download.png"/></button>
+								<button type="button" class="btn btn-sm papers_hoverDanger" ng-click="deleteKeys(data.Name, data.KeyType);"><img src="/modules/Papers/includes/icons/glyphicons-17-bin.png"/></button>
 							</td>
 						</tr>
 					</tbody>
@@ -104,9 +138,18 @@
 			</div>
 			<div class="panel-body panel-collapse collapse" id="papers_certBuilder">
 				<form class="form-horizontal">
-				<div style="width: 100%; text-align: right">
-					<button type="button" class="btn btn-success" ng-class="{'disabled' : showBuildThrobber}" ng-click="buildCertificate();">Build Keys</button>
-					<button type="button" class="btn" data-toggle="modal" data-target="#viewLogInfo" ng-click="readLog('build.help','help');">?</button>
+				<div style="width: 100%;">
+					<table width="100%">
+						<tr>
+							<td align="left">
+								<button type="button" class="btn papers_hoverSuccess" ng-disabled="showBuildThrobber || certKeyName == ''" ng-click="buildCertificate();"><img src="/modules/Papers/includes/icons/glyphicons-45-keys.png"/>&nbsp;&nbsp;Build Keys</button>
+							</td>
+							<td align="right">
+								<button type="button" class="btn" data-toggle="modal" data-target="#viewLogInfo" ng-click="readLog('build.help','help');">?</button>
+							</td>
+						</tr>
+					</table>
+					
 				</div>
 				<div class="form-group">
 					<label class="col-md-2 control-label">Key Type</label>
@@ -268,7 +311,7 @@
 					</div>
 				</div>
 				</form>
-				<button type="button" class="btn btn-secondary" ng-click="clearForm();">Clear Form</button>
+				<button type="button" class="btn papers_hoverInfo" ng-click="clearForm();"><img src="/modules/Papers/includes/icons/glyphicons-198-remove-circle.png"/>&nbsp;&nbsp;Clear Form</button>
 			</div>
 		</div>
 	</div>
@@ -281,7 +324,6 @@
 					<h3>{{ currentLogTitle }}</h3>
 				</div>
 				<div class="modal-body">
-					<!--<pre style="white-space: pre-wrap">{{ currentLogData }}</pre>-->
 					<p ng-bind-html="currentLogData"></p>
 				</div>
 			</div>
@@ -330,11 +372,46 @@
 					<tr ng-repeat="version in changelogs">
 						<td>{{ version }}</td>
 						<td>
-							<button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#viewLogInfo" ng-click="readLog(version, 'changelog');">View</button>
+							<button type="button" class="btn btn-sm papers_hoverInfo" data-toggle="modal" data-target="#viewLogInfo" ng-click="readLog(version, 'changelog');">View</button>
 						</td>
 					</tr>
 				</tbody>
 				</table>
+			</div>
+		</div>
+	</div>
+	
+	<div id="papers_uploaderView" class="modal fade" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<div class="btn btn-primary">
+						<label for="selectedFiles" style="cursor: pointer">Add files</label>
+					</div>
+				</div>
+				<div class="modal-body">
+						
+					<table class="table">
+					<thead>
+						<th>File</th>
+						<th>Actions</th>
+					</thead>
+					<tbody>
+						<tr ng-repeat="file in selectedFiles">
+							<td>{{ file.name }}</td>
+							<td><button class="btn papers_hoverDanger" ng-click="removeSelectedFile(file);"><img src="/modules/Papers/includes/icons/glyphicons-17-bin.png"/></td>
+						</tr>
+					</tbody>
+					</table>
+					
+					<div style="text-align:center">
+						<input type="file" accept=".zip" id="selectedFiles" onchange="angular.element(this).scope().setSelectedFiles()" style="visibility: hidden;" multiple>
+						<img ng-show="uploading" ng-hide="!uploading" src='/img/throbber.gif'/>
+						<button class="btn" ng-show="!uploading" ng-hide="uploading" ng-class="{'papers_hoverInfo' : selectedFiles.length > 0}" ng-disabled="selectedFiles.length == 0" ng-click="uploadFile();"><img src="/modules/Papers/includes/icons/glyphicons-202-upload.png"/>&nbsp;&nbsp;Upload</button>
+					</div>
+
+				</div>
 			</div>
 		</div>
 	</div>
