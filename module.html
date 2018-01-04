@@ -210,6 +210,13 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 				</div>
 				<hr ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'" />
 				<div class="form-group" ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'">
+					<label class="col-md-2 control-label">Subject Alternative Names</label>
+					<div class="col-md-6">
+						<input type="text" class="form-control" ng-model="certSANs" placeholder="*.companyA.com, site1.companyB.com">
+					</div>
+				</div>
+				<hr ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'" />
+				<div class="form-group" ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'">
 					<div class="col-md-8">
 						<label>Modify Certificate Info <input type="checkbox" ng-model="modifyCertInfo"></label>
 					</div>
