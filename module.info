@@ -1,6 +1,6 @@
 {
     "title": "Papers",
     "description": "A TLS\/SSL and SSH certificate generator\/manager.",
-    "version": "1.4",
+    "version": "1.5",
     "author": "sud0nick"
 }
