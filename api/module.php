@@ -13,9 +13,7 @@ define('__UPLOAD__', __INCLUDES__ . "upload/");
 define('__SSL_TEMPLATE__', __SCRIPTS__ . "ssl.cnf");
 
 /*
-	Determine the type of file that has been uploaded and move it to the appropriate
-	directory.  If it's a .zip it is an injection set and will be unpacked.  If it is
-	an .exe it will be moved to __WINDL__, etc.
+	Import keys
 */
 if (!empty($_FILES)) {
 	$response = [];
