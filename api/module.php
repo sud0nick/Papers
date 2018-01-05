@@ -297,7 +297,7 @@ class Papers extends Module
 		$keys = scandir($dir);
 		$certs = array();
 		foreach ($keys as $key) {
-			if ($key == "." || $key == "..") {continue;}
+			if (substr($key, 0, 1) == ".") {continue;}
 
 			$parts = explode(".", $key);
 			$fname = $parts[0];
@@ -352,7 +352,7 @@ class Papers extends Module
 		$contents = scandir($keyDir);
 		$certs = array();
 		foreach ($contents as $cert) {
-			if ($cert == "." || $cert == "..") {continue;}
+			if (substr($cert, 0, 1) == ".") {continue;}
 			$parts = explode(".", $cert);
 			$fname = $parts[0];
 			$type = "." . $parts[1];
@@ -385,7 +385,7 @@ class Papers extends Module
 
 	private function clearDownloadArchive() {
 		foreach (scandir(__DOWNLOAD__) as $file) {
-			if ($file == "." || $file == "..") {continue;}
+			if (substr($file, 0, 1) == ".") {continue;}
 			unlink(__DOWNLOAD__ . $file);
 		}
 		$files = glob(__DOWNLOAD__ . "*");
@@ -409,7 +409,7 @@ class Papers extends Module
 		$msg = "Failed to delete the following files:";
 		$keyDir = ($keyType == "SSH") ? __SSHSTORE__ : __SSLSTORE__;
 		foreach (scandir($keyDir) as $cert) {
-			if ($cert == "." || $cert == "..") {continue;}
+			if (substr($cert, 0, 1) == ".") {continue;}
 			if (explode(".",$cert)[0] == $delCert) {
 				if (!unlink($keyDir . $cert)) {
 					$res = False;
@@ -556,7 +556,7 @@ class Papers extends Module
 		$dir = ($type == "error") ? __LOGS__ : __CHANGELOGS__;
 		$contents = array();
 		foreach (scandir($dir) as $log) {
-			if ($log == "." || $log == "..") {continue;}
+			if (substr($log, 0, 1) == ".") {continue;}
 			array_push($contents, $log);
 		}
 		$this->respond(true, null, $contents);
