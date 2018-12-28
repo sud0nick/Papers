@@ -69,6 +69,12 @@ class Papers extends Module
 			case 'buildCert':
 				$this->buildCert($this->request->parameters);
 				break;
+			case 'encryptKey':
+				$this->respond($this->encryptKey($this->request->keyName, $this->request->keyAlgo, $this->request->keyPass));
+				break;
+			case 'decryptKey':
+				$this->respond($this->decryptKey($this->request->keyName, $this->request->keyPass));
+				break;
 			case 'genSSHKeys':
 				$this->genSSHKeys($this->request->parameters);
 				break;
@@ -286,6 +292,28 @@ class Papers extends Module
 			}
 		}
 		$this->respond(true, "Keys created successfully!");
+	}
+	
+	private function encryptKey($keyName, $algo, $pass) {
+		$retData = array();
+		exec(__SCRIPTS__ . "encryptKeys.sh --encrypt -k " . $keyName . " -a " . $algo . " -p " . $pass, $retData);
+		$res = implode("\n", $retData);
+		if ($res != "Complete") {
+			$this->logError("Key Encryption Error", "The following error occurred:\n\n" . $res);
+			return false;
+		}
+		return true;
+	}
+	
+	private function decryptKey($keyName, $pass) {
+		$retData = array();
+		exec(__SCRIPTS__ . "decryptKeys.sh -k " . $keyName . " -p " . $pass, $retData);
+		$res = implode("\n", $retData);
+		if ($res != "Complete") {
+			$this->logError("Key Decryption Error", "The following error occurred:\n\n" . $res);
+			return false;
+		}
+		return true;
 	}
 	
 	/*

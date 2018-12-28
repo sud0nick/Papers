@@ -34,6 +34,8 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 	$scope.dependsProcessing		= false;
 	$scope.selectedFiles			= [];
 	$scope.uploading				= false;
+	$scope.selectedKey				= '';
+	$scope.certDecryptPassword		= '';
 
 	$scope.checkDepends = (function(){
 		$api.request({
@@ -165,6 +167,47 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 				$api.reloadNavbar();
 			});
 		}
+	});
+	
+	$scope.selectKey = (function(key) {
+		$scope.selectedKey = key;
+	});
+	
+	$scope.encryptKey = (function(name, algo, pass) {
+		$api.request({
+			module: 'Papers',
+			action: 'encryptKey',
+			keyName: name,
+			keyAlgo: algo,
+			keyPass: pass
+		},function(response){
+			if (response.success === false) {
+				alert("Failed to encrypt key.  Check the logs for more info.");
+				return;
+			}
+			$scope.loadCertificates();
+			$('#encryptModal').modal('hide');
+		});
+		
+		$scope.certEncryptPassword = '';
+	});
+	
+	$scope.decryptKey = (function(name, pass) {
+		$api.request({
+			module: 'Papers',
+			action: 'decryptKey',
+			keyName: name,
+			keyPass: pass
+		},function(response){
+			if (response.success === false) {
+				alert("Failed to decrypt key.  Ensure you have entered the password correctly.");
+				return;
+			}
+			$scope.loadCertificates();
+			$('#decryptModal').modal('hide');
+		});
+		
+		$scope.certDecryptPassword = '';
 	});
 
 	$scope.clearForm = (function() {
