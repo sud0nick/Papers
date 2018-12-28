@@ -58,6 +58,10 @@ shift
 done;
 
 # Generate a password on the private key
-openssl rsa -in $ssl_store$KEY.key -out $ssl_store$KEY.key -passin pass:"$PASS";
+openssl rsa -in $ssl_store$KEY.key -out $ssl_store$KEY.key -passin pass:"$PASS" 2>/dev/null;
+if [[ $? != 0 ]]; then
+	echo "Bad Password";
+	exit;
+fi
 
 echo "Complete"

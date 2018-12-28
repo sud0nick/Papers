@@ -377,7 +377,8 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 						</div>
 						<div class="form-group">
 							<div class="col-md-12 text-center">
-								<button type="button" class="btn papers_hoverInfo" ng-class="{'disabled' : certEncryptPassword == ''}" ng-click="encryptKey(selectedKey, certEncryptAlgo, certEncryptPassword);" style="width: 250px">Encrypt</button>
+								<img ng-show="encrypting" ng-hide="!encrypting" src='/img/throbber.gif'/>
+								<button type="button" class="btn papers_hoverInfo" ng-show="!encrypting" ng-hide="encrypting" ng-disabled="certEncryptPassword == ''" ng-click="encryptKey(selectedKey, certEncryptAlgo, certEncryptPassword);" style="width: 250px">Encrypt</button>
 							</div>
 						</div>
 					</div>
@@ -403,7 +404,8 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 						</div>
 						<div class="form-group">
 							<div class="col-md-12 text-center">
-								<button type="button" class="btn papers_hoverInfo" ng-class="{'disabled' : certDecryptPassword == ''}" ng-click="decryptKey(selectedKey, certDecryptPassword);" style="width: 250px">Decrypt</button>
+								<img ng-show="decrypting" ng-hide="!decrypting" src='/img/throbber.gif'/>
+								<button type="button" class="btn papers_hoverInfo" ng-show="!decrypting" ng-hide="decrypting" ng-disabled="certDecryptPassword == ''" ng-click="decryptKey(selectedKey, certDecryptPassword);" style="width: 250px">Decrypt</button>
 							</div>
 						</div>
 					</div>

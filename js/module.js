@@ -36,6 +36,8 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 	$scope.uploading				= false;
 	$scope.selectedKey				= '';
 	$scope.certDecryptPassword		= '';
+	$scope.encrypting				= false;
+	$scope.decrypting				= false;
 
 	$scope.checkDepends = (function(){
 		$api.request({
@@ -174,6 +176,13 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 	});
 	
 	$scope.encryptKey = (function(name, algo, pass) {
+		
+		if (pass.length == 0) {
+			return;
+		}
+		
+		$scope.encrypting = true;
+		
 		$api.request({
 			module: 'Papers',
 			action: 'encryptKey',
@@ -181,33 +190,48 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 			keyAlgo: algo,
 			keyPass: pass
 		},function(response){
+			
+			$scope.encrypting = false;
+			$scope.certEncryptPassword = '';
+			
 			if (response.success === false) {
 				alert("Failed to encrypt key.  Check the logs for more info.");
+				$scope.getLogs();
 				return;
 			}
 			$scope.loadCertificates();
 			$('#encryptModal').modal('hide');
 		});
-		
-		$scope.certEncryptPassword = '';
 	});
 	
 	$scope.decryptKey = (function(name, pass) {
+		
+		if (pass.length == 0) {
+			return;
+		}
+		
+		$scope.decrypting = true;
+		
 		$api.request({
 			module: 'Papers',
 			action: 'decryptKey',
 			keyName: name,
 			keyPass: pass
 		},function(response){
+			
+			$scope.decrypting = false;
+			$scope.certDecryptPassword = '';
+			
 			if (response.success === false) {
 				alert("Failed to decrypt key.  Ensure you have entered the password correctly.");
+				$scope.getLogs();
 				return;
 			}
 			$scope.loadCertificates();
 			$('#decryptModal').modal('hide');
 		});
 		
-		$scope.certDecryptPassword = '';
+		
 	});
 
 	$scope.clearForm = (function() {
@@ -393,6 +417,7 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 			parameters: log,
 			type: type
 		},function(response){
+			console.log(response);
 			if (response.success === true) {
 				$scope.currentLogData = $sce.trustAsHtml(response.data);
 			}
