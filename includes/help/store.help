@@ -1,5 +1,5 @@
 <strong>Encrypted</strong><br />
-Displays if the private key (.pem) is encrypted.  Does not include encryption on .pfx containers.
+Displays if the private key is encrypted.  Does not include encryption on .pfx containers.
 <br /><br />
 
 <strong>PineSSL / PineSSH</strong><br />
@@ -19,3 +19,8 @@ Packages the keys in the selected row into a zip archive and downloads it.
 
 <strong>Delete</strong><br />
 Removes the selected keys from the SSL store.  This can't be undone.
+<br /><br />
+
+<strong>Encrypt / Decrypt</strong><br />
+If this icon is highlighted green the private key is encrypted.  Click the icon and enter the key's password to decrypt it.<br />
+If the icon is not highlighted it is not encrypted.  Click the icon and enter a password to encrypt it.
