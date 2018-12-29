@@ -631,7 +631,17 @@ class Papers extends Module
 		fclose($fh);
 	}
 	private function retrieveLog($logname, $type) {
-		$dir = ($type == "error") ? __LOGS__ : ($type == "help") ? __HELPFILES__ : __CHANGELOGS__;
+		switch($type) {
+                case "error":
+                    $dir = __LOGS__;
+                    break;
+                case "help":
+                    $dir = __HELPFILES__;
+                    break;
+				default:
+					$dir = __CHANGELOGS__;
+					break;
+        }
 		$data = file_get_contents($dir . $logname);
 		if (!$data) {
 			$this->respond(false);
