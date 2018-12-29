@@ -115,11 +115,12 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 								<button type="button" class="btn btn-sm papers_hoverSuccess" ng-disabled="data.Encrypted == 'Yes' && data.KeyType == 'TLS/SSL'" ng-show="data.Authorized==false" ng-click="securePineapple(data.Name, data.KeyType);"><img src="/modules/Papers/includes/icons/glyphicons-204-lock.png"/></button>
 								
 								<!-- Encrypt button -->
-								<button type="button" class="btn btn-sm papers_hoverSuccess" data-toggle="modal" data-target="#encryptModal" ng-show="data.Encrypted == 'No'" ng-click="selectKey(data.Name);"><img src="/modules/Papers/includes/icons/glyphicons-45-keys.png"/></button>
+								<button type="button" class="btn btn-sm papers_hoverSuccess" data-toggle="modal" data-target="#encryptModal" ng-show="data.Encrypted == 'No'" ng-click="selectKey(data.Name, data.KeyType);"><img src="/modules/Papers/includes/icons/glyphicons-45-keys.png"/></button>
 								
 								<!-- Decrypt button -->
-								<button type="button" class="btn btn-sm btn-success papers_hoverDanger" data-toggle="modal" data-target="#decryptModal" ng-show="data.Encrypted == 'Yes'" ng-click="selectKey(data.Name);"><img src="/modules/Papers/includes/icons/glyphicons-45-keys.png"/></button>
+								<button type="button" class="btn btn-sm btn-success papers_hoverDanger" data-toggle="modal" data-target="#decryptModal" ng-show="data.Encrypted == 'Yes'" ng-click="selectKey(data.Name, data.KeyType);"><img src="/modules/Papers/includes/icons/glyphicons-45-keys.png"/></button>
 								
+								<button type="button" class="btn btn-sm papers_hoverInfo" ng-disabled="data.KeyType == 'SSH'" data-toggle="modal" data-target="#viewCert" ng-click="loadCertProps(data.Name);"><img src="/modules/Papers/includes/icons/glyphicons-28-search.png"/></button>
 								<button type="button" class="btn btn-sm papers_hoverInfo" ng-click="downloadKeys(data.Name, data.KeyType);"><img src="/modules/Papers/includes/icons/glyphicons-201-download.png"/></button>
 								<button type="button" class="btn btn-sm papers_hoverDanger" ng-click="deleteKeys(data.Name, data.KeyType);"><img src="/modules/Papers/includes/icons/glyphicons-17-bin.png"/></button>
 							</td>
@@ -282,9 +283,6 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 								<option value="aes256">AES 256</option>
 								<option value="des">DES</option>
 								<option value="des3">3DES</option>
-								<option value="camellia128">Camellia 128</option>
-								<option value="camellia192">Camellia 192</option>
-								<option value="camellia256">Camellia 256</option>
 							</select>
 						</div>
 					</div>
@@ -311,9 +309,6 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 								<option value="aes256">AES 256</option>
 								<option value="des">DES</option>
 								<option value="des3">3DES</option>
-								<option value="camellia128">Camellia 128</option>
-								<option value="camellia192">Camellia 192</option>
-								<option value="camellia256">Camellia 256</option>
 							</select>
 						</div>
 					</div>
@@ -326,6 +321,62 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 				</div>
 				</form>
 				<button type="button" class="btn papers_hoverInfo" ng-click="clearForm();"><img src="/modules/Papers/includes/icons/glyphicons-198-remove-circle.png"/>&nbsp;&nbsp;Clear Form</button>
+			</div>
+		</div>
+	</div>
+	
+	<div id="viewCert" class="modal fade" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h3>Certificate Properties: {{ selectedCert }}</h3>
+				</div>
+				<div class="modal-body">
+					<img ng-show="loadingCert" ng-hide="!loadingCert" src='/img/throbber.gif'/>
+					
+					<table class="table table-striped" ng-show="!loadingCert" ng-hide="loadingCert">
+						<tbody>
+							
+							<tr>
+								<td>Serial</td>
+								<td>{{ viewCert.serial }}</td>
+							</tr>
+							
+							<tr>
+								<td>Subject</td>
+								<td>{{ viewCert.subject }}</td>
+							</tr>
+							
+							<tr>
+								<td>Issuer</td>
+								<td>{{ viewCert.issuer }}</td>
+							</tr>
+							
+							<tr>
+								<td>Subject Alt Names</td>
+								<td>{{ viewCert.dns }}</td>
+							</tr>
+							
+							<tr>
+								<td>Start Date</td>
+								<td>{{ viewCert.start }}</td>
+							</tr>
+							
+							<tr>
+								<td>End Date</td>
+								<td>{{ viewCert.end }}</td>
+							</tr>
+							
+							<tr>
+								<td>Fingerprint</td>
+								<td>{{ viewCert.fingerprint }}</td>
+							</tr>
+							
+						</tbody>
+					</table>
+					
+				</div>
 			</div>
 		</div>
 	</div>
@@ -363,9 +414,6 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 									<option value="aes256">AES 256</option>
 									<option value="des">DES</option>
 									<option value="des3">3DES</option>
-									<option value="camellia128">Camellia 128</option>
-									<option value="camellia192">Camellia 192</option>
-									<option value="camellia256">Camellia 256</option>
 								</select>
 							</div>
 						</div>
@@ -378,7 +426,7 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 						<div class="form-group">
 							<div class="col-md-12 text-center">
 								<img ng-show="encrypting" ng-hide="!encrypting" src='/img/throbber.gif'/>
-								<button type="button" class="btn papers_hoverInfo" ng-show="!encrypting" ng-hide="encrypting" ng-disabled="certEncryptPassword == ''" ng-click="encryptKey(selectedKey, certEncryptAlgo, certEncryptPassword);" style="width: 250px">Encrypt</button>
+								<button type="button" class="btn papers_hoverInfo" ng-show="!encrypting" ng-hide="encrypting" ng-disabled="certEncryptPassword == ''" ng-click="encryptKey(selectedKey, selectedKeyType, certEncryptAlgo, certEncryptPassword);" style="width: 250px">Encrypt</button>
 							</div>
 						</div>
 					</div>
@@ -405,7 +453,7 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 						<div class="form-group">
 							<div class="col-md-12 text-center">
 								<img ng-show="decrypting" ng-hide="!decrypting" src='/img/throbber.gif'/>
-								<button type="button" class="btn papers_hoverInfo" ng-show="!decrypting" ng-hide="decrypting" ng-disabled="certDecryptPassword == ''" ng-click="decryptKey(selectedKey, certDecryptPassword);" style="width: 250px">Decrypt</button>
+								<button type="button" class="btn papers_hoverInfo" ng-show="!decrypting" ng-hide="decrypting" ng-disabled="certDecryptPassword == ''" ng-click="decryptKey(selectedKey, selectedKeyType, certDecryptPassword);" style="width: 250px">Decrypt</button>
 							</div>
 						</div>
 					</div>

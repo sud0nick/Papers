@@ -18,6 +18,10 @@ If this icon is highlighted green the private key is encrypted.  Click the icon 
 If the icon is not highlighted it is not encrypted.  Click the icon, select an algorithm, and enter a password to encrypt it.
 <br /><br />
 
+<strong>View Certificate</strong><br />
+View the human readable properties of the certificate.
+<br /><br />
+
 <strong>Download</strong><br />
 Packages the keys in the selected row into a zip archive and downloads it.
 <br /><br />

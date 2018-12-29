@@ -70,16 +70,19 @@ class Papers extends Module
 				$this->buildCert($this->request->parameters);
 				break;
 			case 'encryptKey':
-				$this->respond($this->encryptKey($this->request->keyName, $this->request->keyAlgo, $this->request->keyPass));
+				$this->respond($this->encryptKey($this->request->keyName, $this->request->keyType, $this->request->keyAlgo, $this->request->keyPass));
 				break;
 			case 'decryptKey':
-				$this->respond($this->decryptKey($this->request->keyName, $this->request->keyPass));
+				$this->respond($this->decryptKey($this->request->keyName, $this->request->keyType, $this->request->keyPass));
 				break;
 			case 'genSSHKeys':
 				$this->genSSHKeys($this->request->parameters);
 				break;
 			case 'loadCertificates':
 				$this->loadCertificates();
+				break;
+			case 'loadCertProps':
+				$this->loadCertificateProperties($this->request->certName);
 				break;
 			case 'downloadKeys':
 				$this->downloadKeys($this->request->parameters->name, $this->request->parameters->type);
@@ -294,9 +297,15 @@ class Papers extends Module
 		$this->respond(true, "Keys created successfully!");
 	}
 	
-	private function encryptKey($keyName, $algo, $pass) {
+	private function encryptKey($keyName, $keyType, $algo, $pass) {
 		$retData = array();
-		exec(__SCRIPTS__ . "encryptKeys.sh --encrypt -k " . $keyName . " -a " . $algo . " -p " . $pass, $retData);
+		$argString = "encryptKeys.sh --encrypt -k " . $keyName . " -a " . $algo . " -p " . $pass;
+		
+		if ($keyType == "SSH") {
+			$argString .= " --ssh";
+		}
+		
+		exec(__SCRIPTS__ . $argString, $retData);
 		$res = implode("\n", $retData);
 		if ($res != "Complete") {
 			$this->logError("Key Encryption Error", "The following error occurred:\n\n" . $res);
@@ -305,9 +314,15 @@ class Papers extends Module
 		return true;
 	}
 	
-	private function decryptKey($keyName, $pass) {
+	private function decryptKey($keyName, $keyType, $pass) {
 		$retData = array();
-		exec(__SCRIPTS__ . "decryptKeys.sh -k " . $keyName . " -p " . $pass, $retData);
+		$argString = "decryptKeys.sh -k " . $keyName . " -p " . $pass;
+		
+		if ($keyType == "SSH") {
+			$argString .= " --ssh";
+		}
+		
+		exec(__SCRIPTS__ . $argString, $retData);
 		$res = implode("\n", $retData);
 		if ($res != "Complete") {
 			$this->logError("Key Decryption Error", "The following error occurred:\n\n" . $res);
@@ -353,6 +368,29 @@ class Papers extends Module
 		$certs = $this->getKeys(__SSLSTORE__);
 		$certs = array_merge($certs, $this->getKeys(__SSHSTORE__));
 		$this->respond(true,null,$certs);
+	}
+	
+	private function loadCertificateProperties($cert) {
+		$retData = array();
+		$res = [];
+		
+		exec(__SCRIPTS__ . "getCertInfo.sh -k " . $cert, $retData);
+		if (count($retData) == 0) {
+			$this->respond(false);
+			return false;
+		}
+		
+		// Create a mapping of the values that can be passed back to the front end
+		foreach ($retData as $line) {
+			$parts = explode("=", $line, 2);
+			$key = $parts[0];
+			$val = $parts[1];
+			$res[$key] = $val;
+		}
+		
+		// Return success and the contents of the tmp file
+		$this->respond(true, null, $res);
+		return true;
 	}
 	
 	private function getKeys($dir) {

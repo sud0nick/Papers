@@ -38,6 +38,9 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 	$scope.certDecryptPassword		= '';
 	$scope.encrypting				= false;
 	$scope.decrypting				= false;
+	$scope.viewCert					= '';
+	$scope.selectedCert				= '';
+	$scope.loadingCert				= false;
 
 	$scope.checkDepends = (function(){
 		$api.request({
@@ -163,6 +166,7 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 				action: 'buildCert',
 				parameters: params
 			},function(response) {
+				$scope.certKeyName = '';
 				$scope.getLogs();
 				$scope.showBuildThrobber = false;
 				$scope.loadCertificates();
@@ -171,11 +175,34 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 		}
 	});
 	
-	$scope.selectKey = (function(key) {
-		$scope.selectedKey = key;
+	$scope.loadCertProps = (function(cert){
+		
+		$scope.loadingCert = true;
+		$scope.viewCert = '';
+		$scope.selectedCert = cert;
+		
+		$api.request({
+			module: 'Papers',
+			action: 'loadCertProps',
+			certName: cert
+		},function(response){
+			$scope.loadingCert = false;
+			if (response === false) {
+				$('#viewCert').modal('hide');
+				return;
+			}
+			$scope.viewCert = response.data;
+		});
 	});
 	
-	$scope.encryptKey = (function(name, algo, pass) {
+	$scope.selectKey = (function(key, type) {
+		$scope.certEncryptAlgo = "aes256";
+		$scope.certEncryptPassword = '';
+		$scope.selectedKey = key;
+		$scope.selectedKeyType = type;
+	});
+	
+	$scope.encryptKey = (function(name, type, algo, pass) {
 		
 		if (pass.length == 0) {
 			return;
@@ -187,6 +214,7 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 			module: 'Papers',
 			action: 'encryptKey',
 			keyName: name,
+			keyType: type,
 			keyAlgo: algo,
 			keyPass: pass
 		},function(response){
@@ -204,7 +232,7 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 		});
 	});
 	
-	$scope.decryptKey = (function(name, pass) {
+	$scope.decryptKey = (function(name, type, pass) {
 		
 		if (pass.length == 0) {
 			return;
@@ -216,6 +244,7 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 			module: 'Papers',
 			action: 'decryptKey',
 			keyName: name,
+			keyType: type,
 			keyPass: pass
 		},function(response){
 			
@@ -330,7 +359,6 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 				}
 			} else {
 				// Alert error
-				alert(response.message);
 			}
 			$scope.loadCertificates();
 		});

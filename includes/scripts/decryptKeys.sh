@@ -5,6 +5,7 @@
 
 # Location of SSL keys
 ssl_store="/pineapple/modules/Papers/includes/ssl/";
+ssh_store="/pineapple/modules/Papers/includes/ssh/";
 
 help() {
 	echo "Decryption script for OpenSSL keys";
@@ -18,6 +19,7 @@ help() {
 	echo '';
 	echo -e '\t-k:\tName of key to be decrypted';
 	echo -e '\t-p:\tPassword to use to unlock the key';
+	echo -e '\t--ssh:\tThe key to encrypt is in the SSH store';
 	echo -e '\t--help:\tDisplays this help info';
 	echo '';
 }
@@ -42,6 +44,9 @@ do
 if [[ "$1" == "--examples" ]]; then
 	examples;
 	exit;
+fi
+if [[ "$1" == "--ssh" ]]; then
+	ssl_store=$ssh_store;
 fi
 if [[ "$1" == "--help" ]]; then
 	help;
