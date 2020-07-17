@@ -41,7 +41,14 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 	$scope.viewCert					= '';
 	$scope.selectedCert				= '';
 	$scope.loadingCert				= false;
-	$scope.certsInstalled			= true;
+  $scope.certsInstalled			= true;
+  $scope.selectedSSHKeys    = '';
+  $scope.loadingSSHKeys     = false;
+  $scope.sshPrivKey         = '';
+  $scope.sshPubKey          = '';
+  $scope.sslPrivKey         = '';
+  $scope.sslCert            = '';
+
 
 	$scope.checkDepends = (function(){
 		$api.request({
@@ -174,7 +181,29 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 				$api.reloadNavbar();
 			});
 		}
-	});
+  });
+  
+  $scope.loadSSHKeys = (function(key){
+
+    $scope.loadingSSHKeys = true;
+    $scope.sshPrivKey = '';
+    $scope.sshPubKey = '';
+    $scope.selectedSSHKeys = key;
+
+    $api.request({
+      module: 'Papers',
+      action: 'loadSSHKeys',
+      keyName: key
+    },function(response){
+      $scope.loadingSSHKeys = false;
+      if (response === false) {
+        $('#viewSSHKeys').modal('hide');
+        return;
+      }
+      $scope.sshPrivKey = $sce.trustAsHtml(response.data.privkey);
+      $scope.sshPubKey = $sce.trustAsHtml(response.data.pubkey);
+    });
+  });
 	
 	$scope.loadCertProps = (function(cert){
 		
@@ -192,7 +221,9 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 				$('#viewCert').modal('hide');
 				return;
 			}
-			$scope.viewCert = response.data;
+      $scope.viewCert = response.data;
+      $scope.sslPrivKey =  $sce.trustAsHtml($scope.viewCert.privkey);
+      $scope.sslCert =  $sce.trustAsHtml($scope.viewCert.certificate);
 		});
 	});
 	

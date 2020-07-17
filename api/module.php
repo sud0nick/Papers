@@ -83,7 +83,10 @@ class Papers extends Module
 				break;
 			case 'loadCertProps':
 				$this->loadCertificateProperties($this->request->certName);
-				break;
+        break;
+      case 'loadSSHKeys':
+        $this->loadSSHKeys($this->request->keyName);
+        break;
 			case 'downloadKeys':
 				$this->downloadKeys($this->request->parameters->name, $this->request->parameters->type);
 				break;
@@ -374,7 +377,7 @@ class Papers extends Module
 		$retData = array();
 		$res = [];
 		
-		exec(__SCRIPTS__ . "getCertInfo.sh -k " . $cert, $retData);
+		exec(__SCRIPTS__ . "getCertInfo.sh -k {$cert}.cer", $retData);
 		if (count($retData) == 0) {
 			$this->respond(false);
 			return false;
@@ -386,12 +389,23 @@ class Papers extends Module
 			$key = $parts[0];
 			$val = $parts[1];
 			$res[$key] = $val;
-		}
+    }
+    
+    $res['privkey'] = file_get_contents(__SSLSTORE__ . "{$cert}.key");
+    $res['certificate'] = file_get_contents(__SSLSTORE__ . "{$cert}.cer");
 		
 		// Return success and the contents of the tmp file
 		$this->respond(true, null, $res);
 		return true;
-	}
+  }
+  
+  private function loadSSHKeys($name) {
+    $this->respond(true, null, array(
+      "privkey" => file_get_contents(__SSHSTORE__ . "{$name}.key"),
+      "pubkey" => file_get_contents(__SSHSTORE__ . "{$name}.pub"))
+    );
+    return true;
+  }
 	
 	private function getKeys($dir) {
 		$keyType = ($dir == __SSLSTORE__) ? "TLS/SSL" : "SSH";
