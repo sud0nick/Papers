@@ -292,7 +292,7 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 		},function(response){
 			if (response.success === true) {
 				// Display certificate information
-				$scope.certificates = response.data;
+        $scope.certificates = response.data;
 			} else {
 				// Display error
 				console.log("Failed to load certificates.");
@@ -470,10 +470,10 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 
 	$scope.refresh = (function(){
 		$scope.getLogs();
-		$scope.getChangeLogs();
 		$scope.clearDownloadArchive();
-	    $scope.getNginxSSLCerts();
-	    $scope.loadCertificates();
+		$scope.getNginxSSLCerts();
+		$scope.checkDepends();
+	  $scope.loadCertificates();
 	});
 	
 	// Upload functions
@@ -534,6 +534,6 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 	
 	// Init
 	$scope.init();
-	$scope.checkDepends();
+	$scope.getChangeLogs();
 	$scope.refresh();
 }])

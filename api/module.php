@@ -284,9 +284,9 @@ class Papers extends Module
 			}
 			$argString = rtrim($argString);
 
-			// Execute encryptKeys.sh with the parameters and check for errors
+			// Execute encryptRSAKeys.sh with the parameters and check for errors
 			$retData = array();
-			exec(__SCRIPTS__ . "encryptKeys.sh " . $argString, $retData);
+			exec(__SCRIPTS__ . "encryptRSAKeys.sh " . $argString, $retData);
 			$res = implode("\n", $retData);
 			if ($res != "Complete") {
 				$this->logError("Certificate Encryption Error", "The public and private keys were generated successfully but encryption failed with the following error:\n\n" . $res);
@@ -298,16 +298,16 @@ class Papers extends Module
 	}
 	
 	private function encryptKey($keyName, $keyType, $algo, $pass) {
-		$retData = array();
-		$argString = "encryptKeys.sh --encrypt -k " . $keyName . " -a " . $algo . " -p " . $pass;
-		
+    $retData = array();
+    $cmdString = "encryptRSAKeys.sh --encrypt -k {$keyName}.key -a {$algo}";
+
 		if ($keyType == "SSH") {
-			$argString .= " --ssh";
-		}
+      $cmdString = "encryptSSHKey.sh -k {$keyName}.key";
+    }
 		
-		exec(__SCRIPTS__ . $argString, $retData);
-		$res = implode("\n", $retData);
-		if ($res != "Complete") {
+		exec("echo " . escapeshellcmd($pass) . " | " . __SCRIPTS__ . $cmdString, $retData);
+		if (end($retData) != "Complete") {
+      $res = implode("\n", $retData);
 			$this->logError("Key Encryption Error", "The following error occurred:\n\n" . $res);
 			return false;
 		}
@@ -315,16 +315,16 @@ class Papers extends Module
 	}
 	
 	private function decryptKey($keyName, $keyType, $pass) {
-		$retData = array();
-		$argString = "decryptKeys.sh -k " . $keyName . " -p " . $pass;
+    $retData = array();
+    $cmdString = "decryptRSAKeys.sh -k {$keyName}.key";
+
+    if ($keyType == "SSH") {
+      $cmdString = "decryptSSHKey.sh -k {$keyName}.key";
+    }
 		
-		if ($keyType == "SSH") {
-			$argString .= " --ssh";
-		}
-		
-		exec(__SCRIPTS__ . $argString, $retData);
-		$res = implode("\n", $retData);
-		if ($res != "Complete") {
+		exec("echo " . escapeshellcmd($pass) . " | " . __SCRIPTS__ . $cmdString, $retData);
+		if (end($retData) != "Complete") {
+      $res = implode("\n", $retData);
 			$this->logError("Key Decryption Error", "The following error occurred:\n\n" . $res);
 			return false;
 		}
@@ -436,12 +436,13 @@ class Papers extends Module
 
 	private function keyIsEncrypted($keyName, $keyType) {
 		$data = array();
-		$keyDir = ($keyType == "SSH") ? __SSHSTORE__ : __SSLSTORE__;
-		exec(__SCRIPTS__ . "testEncrypt.sh -k " . $keyName . " -d " . $keyDir . " 2>&1", $data);
-		if ($data[0] == "writing RSA key") {
-			return false;
-		} else if ($data[0] == "unable to load Private Key") {
+    $keyDir = ($keyType == "SSH") ? __SSHSTORE__ : __SSLSTORE__;
+    $type = ($keyType == "SSH") ? "SSH" : "RSA";
+		exec(__SCRIPTS__ . "isEncrypted.sh -k {$keyName}.key -d {$keyDir} -t {$type} 2>&1", $data);
+		if ($data[0] == "true") {
 			return true;
+		} else if ($data[0] == "false") {
+			return false;
 		}
 	}
 
