@@ -18,8 +18,6 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 	$scope.certEncryptAlgo			= "aes256";
 	$scope.certEncryptPassword		= "";
 	$scope.certExportPKCS12			= false;
-	$scope.certEncryptPKCS12Algo	= "aes256";
-	$scope.certContainerPassword	= "";
 	$scope.certificates				= "";
 	$scope.SSLStatus				= ['Loading...'];
 	$scope.showCertThrobber			= false;
@@ -159,14 +157,8 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 				params['pkey_pass'] = $scope.certEncryptPassword;
 			}
 			if ($scope.certExportPKCS12 === true) {
-							params['container'] = "pkcs12";
-							params['c_algo'] = $scope.certEncryptPKCS12Algo;
-							if (!$scope.certContainerPassword) {
-									alert("You must enter a password for the exported container!");
-									return;
-							}
-							params['c_pass'] = $scope.certContainerPassword;
-					}
+        params['container'] = "pkcs12";
+			}
 		
 			$scope.showBuildThrobber = true;
 			$api.request({
@@ -296,24 +288,22 @@ registerController('PapersController', ['$api', '$scope', '$sce', '$http', funct
 	});
 
 	$scope.clearForm = (function() {
-			$scope.certKeyType				= "tls_ssl";
-			$scope.certDaysValid			= "365";
-	        $scope.certBitSize              = "2048";
-	        $scope.certSigAlgo              = "sha256";
-			$scope.certSANs					= "";
-	        $scope.certKeyName              = "";
-	        $scope.certInfoCountry          = "";
-	        $scope.certInfoState            = "";
-	        $scope.certInfoLocality         = "";
-	        $scope.certInfoOrganization     = "";
-	        $scope.certInfoSection          = "";
-	        $scope.certInfoCN               = "";
-	        $scope.certEncryptKeysBool      = false;
-	        $scope.certEncryptAlgo          = "aes256";
-	        $scope.certEncryptPassword      = "";
-	        $scope.certExportPKCS12         = false;
-	        $scope.certEncryptPKCS12Algo    = "aes256";
-	        $scope.certContainerPassword    = "";
+			$scope.certKeyType				      = "tls_ssl";
+			$scope.certDaysValid			      = "365";
+      $scope.certBitSize              = "2048";
+      $scope.certSigAlgo              = "sha256";
+			$scope.certSANs					        = "";
+      $scope.certKeyName              = "";
+      $scope.certInfoCountry          = "";
+      $scope.certInfoState            = "";
+      $scope.certInfoLocality         = "";
+      $scope.certInfoOrganization     = "";
+      $scope.certInfoSection          = "";
+      $scope.certInfoCN               = "";
+      $scope.certEncryptKeysBool      = false;
+      $scope.certEncryptAlgo          = "aes256";
+      $scope.certEncryptPassword      = "";
+      $scope.certExportPKCS12         = false;
 	});
 
 	$scope.loadCertificates = (function() {

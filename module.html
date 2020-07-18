@@ -277,8 +277,13 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 					<div class="col-md-8">
 						<label>Encrypt Private Key? <input type="checkbox" ng-model="certEncryptKeysBool"></label>
 					</div>
+        </div>
+        <div class="form-group" ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'">
+					<div class="col-md-8">
+						<label>Export keys to PKCS#12 container? <input type="checkbox" ng-model="certExportPKCS12"></label>
+					</div>
 				</div>
-				<div class="panel-body" ng-show="certEncryptKeysBool" ng-hide="!certEncryptKeysBool">
+				<div class="panel-body" ng-show="certEncryptKeysBool || certExportPKCS12" ng-hide="!certEncryptKeysBool && !certExportPKCS12">
 					<div class="form-group" ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'">
 						<label class="col-md-2 control-label">Algorithm</label>
 						<div class="col-md-8">
@@ -299,31 +304,6 @@ $(document).on('mouseenter', '.papers_hoverDanger', function() {
 					</div>
 				</div>
 				<hr />
-				<div class="form-group" ng-show="certKeyType=='tls_ssl'" ng-hide="certKeyType=='ssh'">
-					<div class="col-md-8">
-						<label>Export keys to PKCS#12 container? <input type="checkbox" ng-model="certExportPKCS12"></label>
-					</div>
-				</div>
-				<div class="panel-body" ng-show="certExportPKCS12" ng-hide="!certExportPKCS12">
-					<div class="form-group">
-						<label class="col-md-2 control-label">Container Algorithm</label>
-						<div class="col-md-8">
-							<select class="form-control" style="width:auto" name="containerAlgo" ng-model="certEncryptPKCS12Algo">
-								<option value="aes128">AES 128</option>
-								<option value="aes192">AES 192</option>
-								<option value="aes256">AES 256</option>
-								<option value="des">DES</option>
-								<option value="des3">3DES</option>
-							</select>
-						</div>
-					</div>
-					<div class="form-group">
-						<label class="col-md-2 control-label">Container Password</label>
-						<div class="col-md-6">
-							<input type="password" class="form-control" ng-model="certContainerPassword">
-						</div>
-					</div>
-				</div>
 				</form>
 				<button type="button" class="btn papers_hoverInfo" ng-click="clearForm();"><img src="/modules/Papers/includes/icons/glyphicons-198-remove-circle.png"/>&nbsp;&nbsp;Clear Form</button>
 			</div>

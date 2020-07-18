@@ -258,28 +258,19 @@ class Papers extends Module
 			$cryptInfo = array();
 			$argString = "";
 
-			$cryptInfo['-k'] = $keyName;			
+      $cryptInfo['-k'] = "{$keyName}.key";
+      $cryptInfo['-a'] = $params['algo'];
 
 			// Check if the certificate should be encrypted
 			if (array_key_exists('encrypt', $params)) {
 				$argString = "--encrypt ";
-	
-				$cryptInfo['-a'] = (array_key_exists('algo', $params)) ? $params['algo'] : False;
-				$cryptInfo['-p'] = (array_key_exists('pkey_pass', $params)) ? $params['pkey_pass'] : False;
-	
-				if (!$cryptInfo['-a'] || !$cryptInfo['-p']) {
-					$this->logError("Build Certificate Error", "The public and private keys were generated successfully but an algorithm or password were not supplied for encryption.  The certs can still be found in your SSL store.");
-					$this->respond(false, "Build finished with errors.  Check the logs for details.");
-					return;
-				}
 			}
 			// Check if the certificates should be placed into an encrypted container
 			if (array_key_exists('container', $params)) {
+        $cryptInfo['--pubkey'] = "{$keyName}.cer";
 				$cryptInfo['-c'] = (array_key_exists('container', $params)) ? $params['container'] : False;
-				$cryptInfo['-calgo'] = (array_key_exists('c_algo', $params)) ? $params['c_algo'] : False;
-				$cryptInfo['-cpass'] = (array_key_exists('c_pass', $params)) ? $params['c_pass'] : False;
 			}
-				
+			
 			// Build an argument string with all available arguments
 			foreach ($cryptInfo as $k => $v) {
 				if (!$v) {continue;}
@@ -289,7 +280,7 @@ class Papers extends Module
 
 			// Execute encryptRSAKeys.sh with the parameters and check for errors
 			$retData = array();
-			exec(__SCRIPTS__ . "encryptRSAKeys.sh " . $argString, $retData);
+			exec("echo " . escapeshellcmd($params['pkey_pass']) . " | " . __SCRIPTS__ . "encryptRSAKeys.sh {$argString}", $retData);
 			$res = implode("\n", $retData);
 			if ($res != "Complete") {
 				$this->logError("Certificate Encryption Error", "The public and private keys were generated successfully but encryption failed with the following error:\n\n" . $res);
